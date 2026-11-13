@@ -1,6 +1,6 @@
 # Navigo: la ruta de tu talento
 
-Navigo es una web de orientación vocacional gamificada para estudiantes de bachillerato en Venezuela (Mérida). La fundamentación completa está en [INFORME.md](INFORME.md).
+Navigo es una web de orientación vocacional gamificada para estudiantes de bachillerato en Venezuela (Mérida). La fundamentación completa está en [INFORME.md](INFORME.md) y las instrucciones de uso en [GUIA_DE_USUARIO.md](GUIA_DE_USUARIO.md).
 
 ## Cómo abrirla
 Haz doble clic en `index.html`. No necesita servidor, instalación ni internet; solo usa internet para cargar las fuentes tipográficas, y si no hay conexión usa las del sistema.
