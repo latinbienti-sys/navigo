@@ -1,0 +1,188 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Informe Navigo</title>
+<style>
+:root{--bg:#f3f7fb;--card:#fff;--ink:#12233d;--muted:#5b6b82;--line:#d7e1ec;--sea:#0f4c81;--chip:#eef3f9}
+@media (prefers-color-scheme:dark){:root{--bg:#0c1626;--card:#14243b;--ink:#eaf1fb;--muted:#9db0c9;--line:#24395a;--sea:#5aa9ff;--chip:#1b2f4b}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,"Segoe UI",sans-serif}
+main{max-width:900px;margin:0 auto;padding:28px 16px 60px;background:var(--card);min-height:100vh;box-sizing:border-box}
+h1{color:var(--sea);font-size:2rem;margin-top:0}h2{color:var(--sea);border-bottom:2px solid var(--line);padding-bottom:6px;margin-top:2em}h3{margin-top:1.6em}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:.93rem;display:block;overflow-x:auto}th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}th{background:var(--chip)}
+blockquote{margin:12px 0;padding:10px 14px;border-left:4px solid #ffb020;background:var(--chip);border-radius:6px}blockquote p{margin:0}
+code{background:var(--chip);padding:1px 5px;border-radius:4px}a{color:var(--sea)}hr{border:0;border-top:1px solid var(--line);margin:2em 0}
+@media print{body{background:#fff;color:#000}main{padding:0;max-width:none}h2{break-after:avoid}table,blockquote{break-inside:avoid}}
+</style></head><body><main><h1>Informe: Navigo, orientación vocacional gamificada para bachillerato en Venezuela</h1>
+<p><strong>Fecha:</strong> 13 de noviembre de 2026
+<strong>Ámbito:</strong> liceos públicos y privados del estado Mérida, Venezuela
+<strong>Producto:</strong> prototipo web interactivo «Navigo, la ruta de tu talento» (carpeta <code>navigo/</code>)</p>
+<hr>
+<h2>1. Rol y objetivo</h2>
+<p>Este informe está escrito desde el rol de especialista en orientación vocacional con experiencia en actividades gamificadas y metodologías ágiles. Su objetivo es <strong>usar herramientas tecnológicas gamificadas que, a través del juego, capten los intereses, habilidades, valores y comportamientos de estudiantes de bachillerato</strong>. Así los estudiantes descubren sus talentos y los asocian con oportunidades profesionales, tanto las que ya existen como las que están surgiendo.</p>
+<h2>2. Diagnóstico del contexto</h2>
+<ul>
+<li><strong>El problema en Mérida.</strong> La orientación vocacional se reduce casi siempre a tests de lápiz y papel y a charlas generales. Ninguno de los dos atiende de forma integral ni individual a cada estudiante. Además pesan la falta de información, la presión social (de la familia y de los amigos) y la dificultad para reconocer los propios talentos.</li>
+<li><strong>El mercado laboral venezolano.</strong> La prensa nacional describe un mercado muy deteriorado. Muchos jóvenes combinan los estudios con emprendimientos, oficios técnicos y trabajo remoto, y algunos profesionales han migrado a oficios por los bajos salarios (El Diario, 2026). Un estudio de la UCAB recoge además la percepción de que las carreras largas no garantizan estabilidad, aunque el interés por ellas se recuperó levemente en 2025 (Crónica Uno / Diario de Los Andes, 2025).</li>
+<li><strong>Las tendencias globales.</strong> El <em>Future of Jobs Report 2025</em> del Foro Económico Mundial estima que hacia 2030 se crearán 170 millones de empleos y se desplazarán 92 millones, con un saldo neto de 78 millones. Las habilidades que más crecen son la inteligencia artificial y el big data, las redes y la ciberseguridad y la alfabetización tecnológica. Les siguen el pensamiento creativo, la resiliencia, la flexibilidad y el aprendizaje continuo. La gestión ambiental entra por primera vez al top 10, y el 63 % de los empleadores señala la brecha de habilidades como su principal barrera.</li>
+<li><strong>Las competencias que pide el empleador.</strong> La tesis de Carmona (ULA, 2022) muestra que las organizaciones de Mérida avanzan hacia una selección del talento basada en competencias. También recoge que cerca del 75 % del éxito laboral a largo plazo se asocia a habilidades blandas y que una habilidad técnica conserva su vigencia unos cinco años (Deloitte). La tesis cita además la <strong>Gaceta Oficial N.º 38.924</strong>, el Manual Descriptivo de Competencias Genéricas: trabajo en equipo, liderazgo, comunicación, adaptabilidad, iniciativa, autocontrol, pensamiento analítico, innovación y conciencia del deber social, entre otras.</li>
+</ul>
+<p><strong>Conclusión del diagnóstico.</strong> La orientación debe preparar al estudiante para hacer <em>trayectorias</em> y no solo para elegir <em>una carrera</em>. Eso exige que conozca sus intereses, valores y habilidades blandas, que maneje información actualizada sobre el mercado y que cuente con el acompañamiento de un experto.</p>
+<h2>3. Evidencia sobre la gamificación en la orientación vocacional</h2>
+<ul>
+<li><strong>Aventúrate: la ruta vocacional</strong> (Salinas, Chile, 2023) es el referente directo de este proyecto. Es una aplicación organizada en un mapa de paisajes nacionales. Cada nivel combina un test vocacional (Holland, CHASIDE o Kuder) con tres desafíos lúdicos (memoria, laberinto y sopa de letras), un reto final y estaciones informativas sobre carreras y el mercado laboral. El registro pide solo los datos mínimos (nombre, edad, hobbies y materias favoritas). Su contenido se diseñó con el modelo ADDIE y design thinking, y se validó con el modelo <em>UX Honeycomb</em> de Morville.</li>
+<li><strong>«Decidiendo mi futuro»</strong> (Jalisco, México) fue una intervención gamificada para promover la madurez vocacional en bachillerato. Los estudiantes percibieron que su plan vocacional se iba construyendo y mostraron más motivación y participación. Hay que leer este resultado con cautela: la muestra fue de solo 16 estudiantes y no hubo grupo de control.</li>
+<li><strong>Balance de la evidencia.</strong> Hay indicios consistentes de que la gamificación <strong>aumenta la motivación y la participación</strong>. En cambio, todavía falta evidencia experimental de que mejore la calidad de la decisión vocacional. Por eso Navigo se presenta como <strong>un complemento del orientador, no como un sustituto</strong>, y propone medirse con un diseño de pre y postest (ver la sección 7).</li>
+</ul>
+<h2>4. Propuesta: Navigo</h2>
+<p>Navigo es una ruta de juego por paisajes venezolanos. Cada estación capta una dimensión del estudiante:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Estación (lugar)</th>
+<th>Dimensión</th>
+<th>Instrumento gamificado</th>
+<th>Base teórica</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>Sierra Nevada de Mérida</td>
+<td>Intereses</td>
+<td>30 cartas tipo <em>swipe</em> con 3 respuestas</td>
+<td>Modelo RIASEC de Holland</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Médanos de Coro</td>
+<td>Habilidades</td>
+<td>5 minijuegos: memoria, lógica, verbal, cálculo y creatividad (usos de una tapara)</td>
+<td>Desafíos de Aventúrate; pruebas de aptitud</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Relámpago del Catatumbo</td>
+<td>Comportamientos y habilidades blandas</td>
+<td>8 situaciones de juicio situacional (liceo y comunidad)</td>
+<td>Competencias genéricas de la G.O. 38.924 (Carmona, 2022)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Salto Ángel, Canaima</td>
+<td>Valores</td>
+<td>16 duelos por pares entre 8 valores laborales</td>
+<td>Jerarquía de valores laborales</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Tepuy Roraima</td>
+<td>Estilo de comportamiento</td>
+<td>Misión de rescate de 10 escenas con métricas implícitas</td>
+<td>Evaluación basada en juego; modelo de dos ejes ritmo × foco (estilos sociales, Merrill y Reid)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Archipiélago Los Roques</td>
+<td>Información del mundo laboral</td>
+<td>Tendencias, reto «¿Mito o realidad?» y explorador de carreras</td>
+<td>WEF 2025; contexto venezolano</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Pico Bolívar</td>
+<td>Integración</td>
+<td>Carta de navegación con perfil, afinidad con 38 carreras y oficios y un plan en <em>sprints</em></td>
+<td>Proyecto de vida y metodología ágil</td>
+</tr>
+</tbody></table>
+<h3>4.1 Expedición al tepuy: evaluación del estilo basada en juego</h3>
+<p>Esta estación capta <strong>cómo actúa</strong> el estudiante, además de lo que dice preferir. Lo hace con una misión narrativa: coordinar el rescate de unos científicos atrapados en el Roraima antes de que llegue la tormenta. Antes de empezar se le informa que se observará su forma de decidir, pero no qué opción corresponde a cada estilo.</p>
+<p><strong>Modelo.</strong> Se usan dos ejes de la tradición de los estilos sociales (Merrill y Reid): el <strong>ritmo</strong>, acelerado o pausado, y el <strong>foco</strong>, en las tareas o en las personas. De su combinación salen cuatro tendencias:</p>
+<table>
+<thead>
+<tr>
+<th>Tendencia</th>
+<th>Ejes</th>
+<th>Estilo</th>
+<th>Reto de crecimiento</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Acción</td>
+<td>Acelerado + tareas</td>
+<td>Pionero</td>
+<td>Escuchar y medir los riesgos</td>
+</tr>
+<tr>
+<td>Conexión</td>
+<td>Acelerado + personas</td>
+<td>Inspirador</td>
+<td>Aterrizar los detalles y cerrar lo que empieza</td>
+</tr>
+<tr>
+<td>Calma</td>
+<td>Pausado + personas</td>
+<td>Guardián</td>
+<td>Opinar y adaptarse a los cambios</td>
+</tr>
+<tr>
+<td>Precisión</td>
+<td>Pausado + tareas</td>
+<td>Estratega</td>
+<td>Decidir sin tener toda la información</td>
+</tr>
+</tbody></table>
+<p><strong>Qué se registra (evidencias conductuales):</strong></p>
+<ol>
+<li><strong>Elecciones</strong> en 7 dilemas de 4 opciones, que se muestran en orden aleatorio. Cada opción suma puntos ocultos a una tendencia.</li>
+<li><strong>Tiempo de decisión.</strong> Se le descuenta un tiempo de lectura estimado de 22 ms por carácter y se toma la mediana. Si es menor de 3 s suma a Acción y Conexión; si es mayor de 7 s, a Precisión y Calma.</li>
+<li><strong>Riesgo asumido.</strong> Cuatro escenas tienen opciones con un nivel de riesgo entre 0 y 1 (por ejemplo, la grieta frente al sendero seguro).</li>
+<li><strong>Reparto de 12 raciones</strong> entre el propio equipo, los rescatados y una reserva. Mide la cooperación y la previsión.</li>
+<li><strong>Consulta de la bitácora.</strong> El botón 🔍 es opcional y registra la búsqueda de información.</li>
+<li><strong>Cruce del río.</strong> Es un juego de secuencias de memoria con errores posibles. Registra los fallos, los reintentos y si el estudiante se rinde, lo que da la persistencia.</li>
+</ol>
+<p><strong>Resultados:</strong></p>
+<ul>
+<li>La distribución porcentual de las cuatro tendencias (suma 100 %), el estilo principal y el secundario.</li>
+<li>Un <strong>mapa de cuadrantes</strong> con la posición del estudiante.</li>
+<li>Cinco indicadores de 0 a 100: tolerancia al riesgo, cooperación, previsión, búsqueda de información y persistencia, además del ritmo en segundos.</li>
+<li>Un <strong>índice de confianza</strong> (alta, media o baja). Baja cuando la mitad o más de las decisiones se tomaron en menos de 2,5 s o cuando las dos tendencias principales difieren en menos de 5 puntos. En el panel del orientador esos casos aparecen señalados para revisarlos en la entrevista.</li>
+</ul>
+<p><strong>Integración.</strong> El estilo se traduce a una afinidad con las letras RIASEC: Acción con R, Precisión con I, Conexión con A, Conexión y Calma con S, Acción y Conexión con E, y Precisión y Calma con C. Pesa el 7 % en la afinidad con cada carrera.</p>
+<p><strong>Cautelas.</strong> La literatura sobre evaluaciones basadas en juego indica que mejoran la experiencia del participante, pero su validez predictiva es modesta y depende del modelo que las sustenta (Ramos-Villagrasa y Fernández-del-Río, 2023). Por eso el estilo es un insumo de conversación con poco peso en la recomendación, y su confiabilidad (test-retest) debe estudiarse en el piloto.</p>
+<p><strong>Mecánicas de juego:</strong> experiencia (XP), rangos náuticos (de Grumete a Almirante), insignias, desbloqueo progresivo de estaciones, retroalimentación inmediata, retos con tiempo, confeti y celebraciones, y compañeros de viaje de la fauna venezolana.</p>
+<p><strong>Cómo se calcula la afinidad con cada carrera:</strong> intereses RIASEC con pesos 3-2-1 sobre el código de la carrera (50 %), habilidades (20 %), valores (15 %), competencias blandas (8 %) y estilo de comportamiento (7 %). Los resultados se muestran como «rutas para explorar», no como un veredicto.</p>
+<p><strong>Componente ágil:</strong> el proyecto de vida se gestiona en <em>sprints</em> de 30 días con un tablero Kanban (Por hacer, Haciendo, Hecho). Las metas iniciales se generan a partir del perfil. Al cerrar un sprint se hace una «retrospectiva» que da XP e insignias.</p>
+<p><strong>Acompañamiento experto:</strong> el estudiante exporta su carta de navegación en un archivo JSON. El <strong>panel del orientador</strong> reúne las cartas del grupo, muestra la distribución de intereses dominantes y el promedio de competencias, sugiere talleres grupales y exporta un CSV.</p>
+<p><strong>Privacidad:</strong> se piden datos mínimos y todo queda en el dispositivo (localStorage). No hay servidor ni se envía información a internet. Esto es importante porque los usuarios son menores de edad.</p>
+<h2>5. Oportunidades profesionales incluidas</h2>
+<p>El catálogo tiene 38 carreras y oficios clasificados como <strong>emergentes</strong>, <strong>consolidados</strong> u <strong>oficios técnicos</strong>. Entre los emergentes están ciencia de datos, ciberseguridad, desarrollo de software, energías renovables, ingeniería ambiental, agroindustria, marketing digital, producción audiovisual y logística. Entre los consolidados, que tienen fuerte presencia en Mérida, están medicina, enfermería, educación, derecho, administración y turismo de montaña. Los oficios técnicos (electricidad, mecánica, refrigeración) se forman en el INCES.</p>
+<p>Las instituciones de referencia son la Universidad de Los Andes (ULA), la UPT de Mérida «Kléber Ramírez» (programas nacionales de formación), la UNEFA, la UPEL y el INCES. <em>La oferta académica cambia: hay que validarla cada año con las universidades y con el Sistema Nacional de Ingreso (OPSU).</em></p>
+<h2>6. Plan de implementación (ADDIE con sprints)</h2>
+<ol>
+<li><strong>Análisis (sprint 0):</strong> validar con 2 o 3 liceos de Mérida y sus orientadores la lista de carreras, el lenguaje y las situaciones.</li>
+<li><strong>Diseño:</strong> ajustar los ítems con un panel de expertos (orientadores y psicólogos) y revisar la validez de contenido.</li>
+<li><strong>Desarrollo:</strong> iterar el prototipo actual en sprints de 2 semanas.</li>
+<li><strong>Implementación:</strong> hacer un piloto con 4.º y 5.º año en sesiones de 40 minutos en el laboratorio o con el teléfono, seguidas de una entrevista individual con el orientador.</li>
+<li><strong>Evaluación:</strong> aplicar un pretest y un postest de madurez vocacional, medir la usabilidad (SUS) y la satisfacción, y hacer seguimiento del plan de sprints a los 30 y 60 días.</li>
+</ol>
+<h2>7. Indicadores sugeridos</h2>
+<ul>
+<li>El porcentaje de estudiantes que completa la ruta y su tiempo promedio.</li>
+<li>La variación en la autopercepción de claridad vocacional (antes y después).</li>
+<li>El número de metas cumplidas por sprint.</li>
+<li>La satisfacción del orientador con la información recibida.</li>
+<li>La consistencia de los resultados en una nueva aplicación a las 4 semanas (confiabilidad test-retest).</li>
+</ul>
+<h2>8. Limitaciones</h2>
+<p>Los minijuegos y las escalas son <strong>instrumentos de exploración, no tests psicométricos estandarizados</strong>. Antes de usarlos de forma institucional deben validarse con una población venezolana. Los datos del mercado laboral venezolano son escasos, por lo que se recomienda actualizar el catálogo con información local (gremios, cámaras, universidades).</p>
+<h2>9. Fuentes</h2>
+<ul>
+<li>Carmona, W. (2022). <em>Modelo de selección del talento humano basado en las competencias laborales, Mérida-Venezuela.</em> ULA-CIDE.</li>
+<li>Salinas, M. (2023). <em>Aventúrate: la ruta vocacional.</em> Memoria de título, Diseño Gráfico, Santiago de Chile.</li>
+<li>República Bolivariana de Venezuela (2008). Gaceta Oficial N.º 38.924, Manual Descriptivo de Competencias Genéricas.</li>
+<li>World Economic Forum (2025). <a href="https://www.weforum.org/publications/the-future-of-jobs-report-2025/digest/">Future of Jobs Report 2025</a> y <a href="https://www.weforum.org/media/future-of-jobs-report-2025-78-million-new-job-opportunities-by-2030-but-urgent-upskilling-needed-to-prepare-workforces/">nota de prensa</a>.</li>
+<li><a href="https://redined.educacion.gob.es/xmlui/handle/11162/257563">Gamificación como herramientas para promover la madurez vocacional en estudiantes de bachillerato (REDINED)</a>.</li>
+<li><a href="https://eldiario.com/2025/07/23/bachilleres-egresados-escuelas-privadas-estudiar-carreras-largas/">El Diario (2025): bachilleres y carreras largas</a>; <a href="https://diariodelosandes.com/disminuye-el-numero-de-estudiantes-que-planea-emigrar-despues-de-graduarse-segun-estudio-de-la-ucab">Diario de Los Andes: estudio UCAB</a>; <a href="https://eldiario.com/2026/04/20/cambio-carrera-profesionales-oficios-bajos-salarios/">El Diario (2026): profesionales que cambian a oficios</a>.</li>
+<li>Ramos-Villagrasa, P. J. y Fernández-del-Río, E. (2023). <a href="https://journals.copmadrid.org/jwop/art/jwop2023a18">Predictive validity, applicant reactions, and influence of personal characteristics of a gamefully designed assessment</a>. <em>Journal of Work and Organizational Psychology, 39</em>(3), 169-178.</li>
+<li>Merrill, D. W. y Reid, R. H. (1981). <em>Personal Styles &amp; Effective Performance.</em> Chilton.</li>
+<li>Holland, J. L. (1997). <em>Making Vocational Choices.</em> PAR.</li>
+</ul>
+</main></body></html>
