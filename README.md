@@ -16,7 +16,8 @@ Haz doble clic en `index.html`. No necesita servidor, instalación ni internet; 
 2. Médanos de Coro: 5 minijuegos de habilidades.
 3. Relámpago del Catatumbo: competencias blandas (G.O. 38.924).
 4. Salto Ángel: valores (duelos por pares).
-5. Los Roques: mundo laboral y reto «¿Mito o realidad?».
-6. Pico Bolívar: carta de navegación, carreras afines y plan de vida en sprints.
+5. Tepuy Roraima: estilo de comportamiento (misión de rescate con métricas implícitas).
+6. Los Roques: mundo laboral y reto «¿Mito o realidad?».
+7. Pico Bolívar: carta de navegación, carreras afines y plan de vida en sprints.
 
 Los datos se guardan solo en el navegador (localStorage). El estudiante exporta un `.json` y el orientador lo carga en **Panel del orientador**.

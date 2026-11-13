@@ -201,8 +201,8 @@
   };
 
   // ===== Mapa =====
-  const POS_WIDE = [[12, 74], [29, 30], [47, 70], [64, 30], [80, 70], [88, 26]];
-  const POS_NARROW = [[26, 89], [72, 75], [28, 59], [72, 43], [28, 27], [70, 11]];
+  const POS_WIDE = [[9, 74], [23, 30], [37, 72], [51, 30], [65, 72], [78, 30], [90, 68]];
+  const POS_NARROW = [[26, 91], [72, 78], [28, 65], [72, 52], [28, 39], [72, 26], [30, 11]];
   VIEWS.mapa = function () {
     const narrow = window.innerWidth <= 640;
     const pos = narrow ? POS_NARROW : POS_WIDE;
@@ -558,7 +558,219 @@
       <p class="muted small">Tus valores no dicen «qué carrera», sino «cómo» quieres vivirla: en qué tipo de lugar, con qué ritmo y para qué.</p>`);
   }
 
-  // ===== 5. Mundo laboral =====
+  // ===== 5. Expedición al tepuy (estilo de comportamiento) =====
+  const TK = ["accion", "conexion", "calma", "precision"];
+  VIEWS.expedicion = function (arg) {
+    const e = est("expedicion");
+    if (S.estilo && arg !== "repetir") return resultadoEstilo();
+    const pts = { accion: 0, conexion: 0, calma: 0, precision: 0 };
+    const m = { tiempos: [], riesgo: [], info: 0, infoDisp: 0, reparto: null, piedras: { fallos: 0, reintentos: 0, rendido: false, superado: false } };
+    let i = 0;
+
+    app.innerHTML = `${backBtn()}${stHead(e)}
+      <div class="card stack" style="max-width:720px;margin:0 auto">
+        <h3>🏕️ Antes de subir</h3>
+        <p>En esta misión vas a coordinar un rescate en el tepuy Roraima. Observaremos <b>cómo tomas decisiones</b>, no lo que sabes.</p>
+        <ul>
+          <li>No hay respuestas buenas ni malas.</li>
+          <li>Responde como actuarías de verdad, no como «se debería».</li>
+          <li>Puedes consultar la bitácora 🔍 cuando quieras. El tiempo no te quita puntos.</li>
+        </ul>
+        <div><button class="btn sun" id="go">Comenzar la expedición →</button></div>
+      </div>`;
+    $("#go").addEventListener("click", scene);
+
+    function shell(inner) {
+      app.innerHTML = `${backBtn()}
+        <div class="card stack" style="max-width:760px;margin:0 auto">
+          <div class="row" style="justify-content:space-between"><b>🏕️ Escena ${i + 1} de ${D.MISION.length}</b><span class="muted small">⛈️ La tormenta se acerca…</span></div>
+          <div class="progress"><span style="width:${(i / D.MISION.length) * 100}%;background:${e.color}"></span></div>
+          ${inner}
+        </div>`;
+    }
+    function next() { i++; scene(); }
+
+    function scene() {
+      if (i >= D.MISION.length) return terminar();
+      const sc = D.MISION[i];
+      if (sc.tipo === "recursos") return recursos(sc);
+      if (sc.tipo === "piedras") return piedras(sc);
+      const opts = shuffle(sc.o);
+      shell(`<h3>${esc(sc.s)}</h3>
+        ${sc.info ? `<div><button class="btn ghost sm" id="info">🔍 Consultar la bitácora</button><p class="small muted" id="infoTxt" hidden style="margin-top:8px">📓 ${esc(sc.info)}</p></div>` : ""}
+        <div class="opts">${opts.map((o, n) => `<button class="opt" data-n="${n}">${esc(o.t)}</button>`).join("")}</div>`);
+      if (sc.info) {
+        m.infoDisp++;
+        $("#info").addEventListener("click", (ev) => { ev.target.disabled = true; $("#infoTxt").hidden = false; m.info++; });
+      }
+      const t0 = performance.now();
+      const leer = (sc.s.length + opts.reduce((a, o) => a + o.t.length, 0)) * 22; // ms estimados de lectura
+      $$(".opt").forEach((b) => b.addEventListener("click", () => {
+        const o = opts[+b.dataset.n];
+        m.tiempos.push({ bruto: performance.now() - t0, ajustado: Math.max(300, performance.now() - t0 - leer) });
+        Object.entries(o.p).forEach(([k, v]) => (pts[k] += v));
+        if (o.r != null) m.riesgo.push(o.r);
+        next();
+      }));
+    }
+
+    function recursos(sc) {
+      const rep = { propio: 0, rescate: 0, reserva: 0 };
+      function draw() {
+        const quedan = sc.total - rep.propio - rep.rescate - rep.reserva;
+        shell(`<h3>🎒 ${esc(sc.s)}</h3>
+          <p class="muted">Quedan <b>${quedan}</b> raciones por repartir.</p>
+          <div class="stack">${sc.grupos.map((g) => `<div class="row" style="justify-content:space-between;border:1.5px solid var(--line);border-radius:14px;padding:10px 14px">
+            <span><b>${esc(g.t)}</b><br><span style="letter-spacing:2px">${"🍞".repeat(rep[g.k]) || '<span class="muted small">—</span>'}</span></span>
+            <span class="row"><button class="btn ghost sm" data-k="${g.k}" data-d="-1" ${rep[g.k] ? "" : "disabled"} aria-label="Quitar">−</button><b style="min-width:22px;text-align:center">${rep[g.k]}</b><button class="btn ghost sm" data-k="${g.k}" data-d="1" ${quedan ? "" : "disabled"} aria-label="Agregar">+</button></span>
+          </div>`).join("")}</div>
+          <div><button class="btn" id="ok" ${quedan ? "disabled" : ""}>Confirmar reparto →</button></div>`);
+        $$("[data-k]").forEach((b) => b.addEventListener("click", () => { rep[b.dataset.k] += +b.dataset.d; draw(); }));
+        $("#ok").addEventListener("click", () => {
+          m.reparto = Object.assign({}, rep);
+          pts.accion += (rep.propio / sc.total) * 4;
+          pts.calma += (rep.rescate / sc.total) * 3;
+          pts.conexion += (rep.rescate / sc.total) * 1;
+          pts.precision += (rep.reserva / sc.total) * 4;
+          next();
+        });
+      }
+      draw();
+    }
+
+    function piedras(sc) {
+      const rondas = [3, 4, 5];
+      let ronda = 0, seq = [], pos = 0, bloqueado = true;
+      const P = m.piedras;
+      function tablero(msg) {
+        shell(`<h3>🌊 ${esc(sc.s)}</h3>
+          <p class="muted" id="pmsg">${msg}</p>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:330px;margin:0 auto">
+            ${[0, 1, 2, 3, 4, 5].map((k) => `<button class="mem" data-s="${k}" style="color:inherit;background:var(--bg2);font-size:1.6rem" aria-label="Piedra ${k + 1}">🪨</button>`).join("")}
+          </div><div id="pact"></div>`);
+        $$("[data-s]").forEach((b) => b.addEventListener("click", () => pisar(+b.dataset.s, b)));
+      }
+      function mostrar() {
+        seq = Array.from({ length: rondas[ronda] }, () => Math.floor(Math.random() * 6));
+        pos = 0; bloqueado = true;
+        tablero(`Ronda ${ronda + 1} de ${rondas.length}: observa las piedras firmes…`);
+        seq.forEach((s, k) => {
+          later(() => { const b = $(`[data-s="${s}"]`); if (b) b.style.background = "var(--sun)"; }, 500 + k * 700);
+          later(() => { const b = $(`[data-s="${s}"]`); if (b) b.style.background = "var(--bg2)"; }, 500 + k * 700 + 450);
+        });
+        later(() => { bloqueado = false; const el = $("#pmsg"); if (el) el.textContent = "¡Tu turno! Pisa las piedras en el mismo orden."; }, 500 + seq.length * 700);
+      }
+      function pisar(s, b) {
+        if (bloqueado) return;
+        if (s === seq[pos]) {
+          b.style.background = "var(--ok)"; later(() => (b.style.background = "var(--bg2)"), 250);
+          pos++;
+          if (pos === seq.length) {
+            bloqueado = true; ronda++;
+            if (ronda >= rondas.length) { P.superado = true; $("#pmsg").textContent = "¡Cruzaste el río! 🎉"; later(next, 900); }
+            else { $("#pmsg").textContent = "¡Bien! Siguiente tramo…"; later(mostrar, 900); }
+          }
+        } else {
+          bloqueado = true; P.fallos++;
+          b.style.background = "var(--bad)";
+          if (P.fallos >= 5) { $("#pmsg").textContent = "El río creció: rodean por la orilla."; P.rendido = true; later(next, 1200); return; }
+          $("#pmsg").textContent = "¡Splash! Pisaste una piedra suelta.";
+          $("#pact").innerHTML = `<div class="row" style="justify-content:center;margin-top:14px"><button class="btn" id="retry">Intentar de nuevo</button><button class="btn ghost" id="giveup">Rodear el río (más largo)</button></div>`;
+          $("#retry").addEventListener("click", () => { P.reintentos++; mostrar(); });
+          $("#giveup").addEventListener("click", () => { P.rendido = true; next(); });
+        }
+      }
+      mostrar();
+    }
+
+    function terminar() {
+      const aj = m.tiempos.map((t) => t.ajustado).sort((a, b) => a - b);
+      const mediana = aj.length ? aj[Math.floor(aj.length / 2)] / 1000 : 0;
+      if (mediana < 3) { pts.accion += 1.5; pts.conexion += 0.5; }
+      else if (mediana > 7) { pts.precision += 1.5; pts.calma += 0.5; }
+      const infoRatio = m.infoDisp ? m.info / m.infoDisp : 0;
+      if (infoRatio >= 0.5) pts.precision += 1;
+
+      const total = TK.reduce((a, k) => a + pts[k], 0) || 1;
+      const shares = {}; TK.forEach((k) => (shares[k] = Math.round((pts[k] / total) * 100)));
+      const diff = 100 - TK.reduce((a, k) => a + shares[k], 0);
+      const orden = TK.slice().sort((a, b) => shares[b] - shares[a]);
+      shares[orden[0]] += diff;
+
+      const rep = m.reparto || { propio: 0, rescate: 0, reserva: 0 };
+      const P = m.piedras;
+      const persistencia = P.fallos === 0 ? 70 : clamp(Math.round((P.reintentos / P.fallos) * 100 * (P.superado ? 1 : 0.7)), 0, 100);
+      const indicadores = {
+        riesgo: Math.round(avg(m.riesgo) * 100),
+        cooperacion: clamp(Math.round((rep.rescate / 8) * 100), 0, 100),
+        prevision: clamp(Math.round(clamp((rep.reserva / 5) * 100, 0, 100) * 0.6 + infoRatio * 100 * 0.4), 0, 100),
+        informacion: Math.round(infoRatio * 100),
+        persistencia
+      };
+      const alertas = [];
+      const rapidas = m.tiempos.filter((t) => t.bruto < 2500).length;
+      if (m.tiempos.length && rapidas / m.tiempos.length >= 0.5) alertas.push("Muchas decisiones tomadas en menos de 2,5 segundos: puede que no haya leído con atención.");
+      if (shares[orden[0]] - shares[orden[1]] < 5) alertas.push("Dos o más tendencias casi empatadas: perfil versátil o poco definido; conviene conversarlo.");
+      S.estilo = {
+        shares, principal: orden[0], secundario: orden[1], indicadores, ritmoSeg: Math.round(mediana * 10) / 10,
+        reparto: rep, piedras: P, alertas, confianza: alertas.length === 0 ? "Alta" : alertas.length === 1 ? "Media" : "Baja"
+      };
+      save();
+      resultadoEstilo();
+    }
+  };
+
+  const INDICADORES = {
+    riesgo: { nombre: "Tolerancia al riesgo", corto: "Tolerancia al riesgo" },
+    cooperacion: { nombre: "Cooperación", corto: "Cooperación" },
+    prevision: { nombre: "Previsión", corto: "Previsión" },
+    informacion: { nombre: "Búsqueda de información", corto: "Busca información" },
+    persistencia: { nombre: "Persistencia", corto: "Persistencia" }
+  };
+  function ritmoTxt(s) { return s < 3 ? "decisiones ágiles" : s > 7 ? "decisiones reflexivas" : "ritmo equilibrado"; }
+  function cuadrante(sh) {
+    const acel = sh.accion + sh.conexion - (sh.calma + sh.precision);
+    const pers = sh.conexion + sh.calma - (sh.accion + sh.precision);
+    const x = 130 + clamp(pers, -100, 100) * 1.0, y = 130 - clamp(acel, -100, 100) * 1.0;
+    const T = D.TENDENCIAS_ESTILO;
+    const q = (k, tx, ty, anchor) => `<text x="${tx}" y="${ty}" text-anchor="${anchor}" font-size="12" font-weight="800" fill="${T[k].color}">${T[k].nombre}</text>`;
+    return `<svg class="radar" viewBox="0 0 260 270" role="img" aria-label="Mapa de estilo: ritmo ${acel >= 0 ? "acelerado" : "pausado"}, foco en ${pers >= 0 ? "personas" : "tareas"}">
+      <rect x="20" y="20" width="110" height="110" fill="${T.accion.color}" opacity=".10"/><rect x="130" y="20" width="110" height="110" fill="${T.conexion.color}" opacity=".12"/>
+      <rect x="130" y="130" width="110" height="110" fill="${T.calma.color}" opacity=".10"/><rect x="20" y="130" width="110" height="110" fill="${T.precision.color}" opacity=".10"/>
+      <line x1="20" y1="130" x2="240" y2="130" stroke="var(--line)" stroke-width="1.5"/><line x1="130" y1="20" x2="130" y2="240" stroke="var(--line)" stroke-width="1.5"/>
+      ${q("accion", 26, 36, "start")}${q("conexion", 234, 36, "end")}${q("calma", 234, 232, "end")}${q("precision", 26, 232, "start")}
+      <text x="130" y="13" text-anchor="middle" font-size="10" fill="var(--muted)">RITMO ACELERADO</text>
+      <text x="130" y="255" text-anchor="middle" font-size="10" fill="var(--muted)">RITMO PAUSADO</text>
+      <text x="8" y="134" font-size="10" fill="var(--muted)" transform="rotate(-90 8 134)" text-anchor="middle">TAREAS</text>
+      <text x="252" y="134" font-size="10" fill="var(--muted)" transform="rotate(90 252 134)" text-anchor="middle">PERSONAS</text>
+      <circle cx="${x}" cy="${y}" r="13" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/><text x="${x}" y="${y + 5}" text-anchor="middle" font-size="14">${S.perfil ? S.perfil.companero : "•"}</text>
+    </svg>`;
+  }
+  function estiloHtml() {
+    const E = S.estilo, T = D.TENDENCIAS_ESTILO, pr = T[E.principal], se = T[E.secundario];
+    return `
+      <div class="result-hero">
+        <div>
+          <div class="muted small" style="font-weight:800;text-transform:uppercase">Tu estilo de comportamiento</div>
+          <div class="code" style="font-size:2.2rem;letter-spacing:.02em;color:${pr.color}">${pr.estilo}</div>
+          <p class="small muted" style="margin:0 0 .6em">${pr.eje} · con un toque de <b>${se.nombre}</b></p>
+          <p>${pr.desc}</p>
+          <p class="small"><b>Tu reto de crecimiento:</b> ${pr.reto}</p>
+        </div>
+        ${cuadrante(E.shares)}
+      </div>
+      <div class="grid g2" style="margin-top:6px">
+        <div><h4>Cómo se reparte tu energía</h4>${bars(E.shares, { accion: { corto: T.accion.nombre }, conexion: { corto: T.conexion.nombre }, calma: { corto: T.calma.nombre }, precision: { corto: T.precision.nombre } }, (k) => T[k].color)}</div>
+        <div><h4>Lo que mostraron tus decisiones</h4>${bars(E.indicadores, INDICADORES, () => "#c27c0e")}
+          <p class="small muted" style="margin-top:8px">⏱️ Ritmo: ${E.ritmoSeg} s por decisión, descontando el tiempo de lectura (${ritmoTxt(E.ritmoSeg)}).</p></div>
+      </div>
+      <p class="small muted">Confianza del perfil: <b>${E.confianza}</b>${E.alertas.length ? " — " + E.alertas.map(esc).join(" ") : ". Tus respuestas fueron consistentes y pausadas."}</p>`;
+  }
+  function resultadoEstilo() {
+    finishStation("expedicion", estiloHtml() + `<p class="muted small">El estilo describe <b>tendencias</b> de este momento, no te encasilla: todas las personas usamos los cuatro según la situación.</p>`);
+  }
+
+  // ===== 6. Mundo laboral =====
   VIEWS.mundo = function (arg) {
     const e = est("mundo");
     let filtro = "todas", tipo = "todas";
@@ -615,12 +827,17 @@
   // ===== 6. Carta de navegación =====
   function matches() {
     const r = S.intereses, a = S.aptitudes, c = S.competencias.scores, v = S.valores.scores, w = [3, 2, 1];
+    // Afinidad del estilo con cada letra RIASEC (tendencias normalizadas a la mayor = 100)
+    const sh = (S.estilo && S.estilo.shares) || { accion: 25, conexion: 25, calma: 25, precision: 25 };
+    const mx = Math.max(...TK.map((k) => sh[k])) || 1, n = {}; TK.forEach((k) => (n[k] = (sh[k] / mx) * 100));
+    const afin = { R: n.accion, I: n.precision, A: n.conexion, S: (n.conexion + n.calma) / 2, E: (n.accion + n.conexion) / 2, C: (n.precision + n.calma) / 2 };
     return D.CARRERAS.map((k) => {
       const rs = [...k.code].reduce((s, L, i) => s + (r[L] || 0) * w[i], 0) / 6;
       const as = avg(k.apt.map((x) => a[x] || 0));
       const cs = avg(k.comp.map((x) => c[x] || 0));
       const vs = avg(k.val.map((x) => v[x] || 0));
-      return Object.assign({}, k, { score: Math.round(0.55 * rs + 0.2 * as + 0.15 * vs + 0.1 * cs), rs, as, vs, cs });
+      const es = [...k.code].reduce((s, L, i) => s + (afin[L] || 0) * w[i], 0) / 6;
+      return Object.assign({}, k, { score: Math.round(0.5 * rs + 0.2 * as + 0.15 * vs + 0.08 * cs + 0.07 * es), rs, as, vs, cs, es });
     }).sort((x, y) => y.score - x.score);
   }
   function planInicial(top) {
@@ -678,6 +895,7 @@
         En los desafíos destacaste en <b>${aptTop.map((k) => D.APTITUDES[k].nombre.toLowerCase()).join("</b> y <b>")}</b>, y frente a situaciones reales sueles mostrar
         <b>${compTop.map((k) => D.COMPETENCIAS[k].corto.toLowerCase()).join("</b>, <b>")}</b>. Para tu vida profesional valoras especialmente
         <b>${valTop.map((k) => D.VALORES[k].nombre.toLowerCase()).join("</b>, <b>")}</b>.
+        En la expedición actuaste con un estilo <b>${D.TENDENCIAS_ESTILO[S.estilo.principal].estilo}</b> (${D.TENDENCIAS_ESTILO[S.estilo.principal].eje.toLowerCase()}).
         ${p.materias.length ? `Tus materias favoritas (${p.materias.map(esc).join(", ")}) ` : "Tus gustos "}son pistas que vale la pena seguir.</p>
       </div>
 
@@ -687,8 +905,10 @@
         <div class="card"><h3>💎 Valores</h3><ol class="rank-list">${S.valores.orden.map((k) => `<li>${D.VALORES[k].icono} ${esc(D.VALORES[k].nombre)}</li>`).join("")}</ol></div>
       </div>
 
+      <div class="card" style="margin-top:16px"><h3>🏕️ Estilo de comportamiento</h3>${estiloHtml()}</div>
+
       <h2 style="margin-top:26px">🎯 Rutas profesionales que encajan contigo</h2>
-      <p class="muted">La afinidad combina intereses (55 %), habilidades (20 %), valores (15 %) y competencias (10 %). Úsala para explorar, no para cerrar puertas.</p>
+      <p class="muted">La afinidad combina intereses (50 %), habilidades (20 %), valores (15 %), competencias (8 %) y estilo de comportamiento (7 %). Úsala para explorar, no para cerrar puertas.</p>
       <div class="grid g3">
         ${top.slice(0, 6).map((c, i) => `<div class="card career">
           <div class="row" style="justify-content:space-between"><span class="match">${c.score}%</span><span class="tag ${c.tag}">${c.tag}</span></div>
@@ -712,6 +932,7 @@
           <li>¿Qué tienen en común las tres primeras rutas que me salieron? ¿Hay alguna que me sorprenda?</li>
           <li>¿Mis valores principales (${valTop.map((k) => D.VALORES[k].nombre.toLowerCase()).join(", ")}) se cumplen en esas carreras en Venezuela hoy?</li>
           <li>¿Cómo puedo fortalecer <b>${compLow.map((k) => D.COMPETENCIAS[k].corto.toLowerCase()).join("</b> y <b>")}</b> antes de graduarme?</li>
+          <li>Mi estilo es <b>${D.TENDENCIAS_ESTILO[S.estilo.principal].estilo}</b>: ¿en qué ambientes de estudio y trabajo me sentiría cómodo(a)? ¿Cómo trabajo mi reto: ${D.TENDENCIAS_ESTILO[S.estilo.principal].reto.toLowerCase()}</li>
           <li>¿Qué opciones cortas (TSU, oficios, cursos) me permiten empezar mientras estudio?</li>
         </ul>
       </div>
@@ -776,7 +997,7 @@
       app: "navigo", version: 1, fecha: new Date().toISOString(),
       perfil: S.perfil, xp: S.xp, rango: rango(S.xp).n, codigo: hollandCode(),
       intereses: S.intereses, aptitudes: S.aptitudes, competencias: S.competencias.scores,
-      valores: S.valores.scores, valoresOrden: S.valores.orden, mitos: S.mitos,
+      valores: S.valores.scores, valoresOrden: S.valores.orden, mitos: S.mitos, estilo: S.estilo,
       carreras: top.slice(0, 6).map((c) => ({ n: c.n, afinidad: c.score })),
       plan: S.plan ? { sprint: S.plan.sprint, metasLogradas: S.plan.cerradas } : null
     };
@@ -835,7 +1056,11 @@
       const vo = shuffle(Object.keys(D.VALORES));
       const code = Object.entries(r).sort((x, y) => y[1] - x[1]).slice(0, 3).map((x) => x[0]).join("");
       const car = D.CARRERAS.filter((x) => x.code[0] === code[0]);
-      return { app: "navigo", demo: true, perfil: { nombre: n + " (ejemplo)", edad: 15 + Math.floor(Math.random() * 3), anio: Math.random() < 0.5 ? "4to año" : "5to año" }, codigo: code, intereses: r, aptitudes: a, competencias: c, valoresOrden: vo, carreras: [{ n: (car[0] || D.CARRERAS[0]).n, afinidad: 60 + Math.round(Math.random() * 25) }] };
+      const sh = {}; let rest = 100; const tk = shuffle(TK);
+      tk.forEach((k, i) => { const v = i === 3 ? rest : Math.round(Math.random() * rest * 0.6); sh[k] = v; rest -= v; });
+      const ord = TK.slice().sort((x, y) => sh[y] - sh[x]);
+      const estilo = { shares: sh, principal: ord[0], secundario: ord[1], confianza: ["Alta", "Alta", "Media", "Baja"][Math.floor(Math.random() * 4)], indicadores: { riesgo: Math.round(Math.random() * 100), cooperacion: Math.round(Math.random() * 100) } };
+      return { app: "navigo", demo: true, perfil: { nombre: n + " (ejemplo)", edad: 15 + Math.floor(Math.random() * 3), anio: Math.random() < 0.5 ? "4to año" : "5to año" }, codigo: code, intereses: r, aptitudes: a, competencias: c, valoresOrden: vo, estilo, carreras: [{ n: (car[0] || D.CARRERAS[0]).n, afinidad: 60 + Math.round(Math.random() * 25) }] };
     });
   }
   function renderGrupo() {
@@ -852,16 +1077,19 @@
         </div>
         <div class="card"><h3>Competencias blandas promedio</h3>${bars(compAvg, D.COMPETENCIAS, () => "#7a5af5")}
           <p class="small" style="margin-top:10px">💡 Sugerencia de taller grupal: trabajar <b>${low.join("</b> y <b>")}</b>.</p></div>
+        <div class="card"><h3>Estilos de comportamiento</h3>
+          <div class="bars">${TK.map((k) => [k, GRUPO.filter((g) => g.estilo && g.estilo.principal === k).length]).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="bar-row"><span>${D.TENDENCIAS_ESTILO[k].estilo}</span><div class="bar"><span style="width:${(v / GRUPO.length) * 100}%;background:${D.TENDENCIAS_ESTILO[k].color}"></span></div><span>${v}</span></div>`).join("")}</div>
+          <p class="small" style="margin-top:10px">⚠️ Perfiles con confianza baja (revisar en entrevista): <b>${GRUPO.filter((g) => g.estilo && g.estilo.confianza === "Baja").length}</b></p></div>
       </div>
       <div class="card" style="margin-top:16px">
         <div class="row" style="justify-content:space-between"><h3 style="margin:0">Estudiantes</h3><button class="btn sm" id="csv">⬇️ Descargar CSV</button></div>
         <div class="table-wrap" style="margin-top:10px"><table>
-          <thead><tr><th>Nombre</th><th>Edad</th><th>Año</th><th>Código</th><th>Habilidad top</th><th>Competencia top</th><th>Valor #1</th><th>Ruta #1</th></tr></thead>
+          <thead><tr><th>Nombre</th><th>Edad</th><th>Año</th><th>Código</th><th>Habilidad top</th><th>Competencia top</th><th>Valor #1</th><th>Estilo</th><th>Confianza</th><th>Ruta #1</th></tr></thead>
           <tbody>${GRUPO.map((g) => { const r = filaGrupo(g); return `<tr>${r.map((x) => `<td>${esc(x)}</td>`).join("")}</tr>`; }).join("")}</tbody>
         </table></div>
       </div>`;
     $("#csv").addEventListener("click", () => {
-      const head = ["Nombre", "Edad", "Año", "Código Holland", "Habilidad top", "Competencia top", "Valor #1", "Ruta #1", "Afinidad"];
+      const head = ["Nombre", "Edad", "Año", "Código Holland", "Habilidad top", "Competencia top", "Valor #1", "Estilo", "Confianza del estilo", "Ruta #1", "Afinidad"];
       const rows = GRUPO.map((g) => filaGrupo(g).concat([(g.carreras && g.carreras[0] && g.carreras[0].afinidad) || ""]));
       const csv = [head].concat(rows).map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(";")).join("\r\n");
       download("navigo-grupo.csv", "﻿" + csv, "text/csv;charset=utf-8");
@@ -871,7 +1099,10 @@
     const top = (o, meta) => { const e = Object.entries(o || {}).sort((a, b) => b[1] - a[1])[0]; return e && meta[e[0]] ? (meta[e[0]].corto || meta[e[0]].nombre) : "—"; };
     const p = g.perfil || {};
     return [p.nombre || "—", p.edad || "—", p.anio || "—", g.codigo || "—", top(g.aptitudes, D.APTITUDES), top(g.competencias, D.COMPETENCIAS),
-      g.valoresOrden && D.VALORES[g.valoresOrden[0]] ? D.VALORES[g.valoresOrden[0]].nombre : "—", (g.carreras && g.carreras[0] && g.carreras[0].n) || "—"];
+      g.valoresOrden && D.VALORES[g.valoresOrden[0]] ? D.VALORES[g.valoresOrden[0]].nombre : "—",
+      g.estilo && D.TENDENCIAS_ESTILO[g.estilo.principal] ? D.TENDENCIAS_ESTILO[g.estilo.principal].estilo : "—",
+      (g.estilo && g.estilo.confianza) || "—",
+      (g.carreras && g.carreras[0] && g.carreras[0].n) || "—"];
   }
 
   // ===== Fundamentos =====
@@ -890,6 +1121,7 @@
         <div class="card"><b>🎮 Habilidades — minijuegos</b><p class="small">Siguiendo la estructura de «desafíos» de Aventúrate (memorice, laberinto, sopa de letras), cinco minijuegos estiman memoria, razonamiento lógico, razonamiento verbal, cálculo y creatividad (fluidez de ideas).</p></div>
         <div class="card"><b>⚡ Comportamientos — competencias genéricas</b><p class="small">Ocho situaciones de juicio situacional revelan habilidades blandas tomadas del Manual Descriptivo de Competencias Genéricas (Gaceta Oficial N.º 38.924), que la tesis de Carmona (ULA, 2022) propone para la selección del talento humano por competencias.</p></div>
         <div class="card"><b>💎 Valores — comparación por pares</b><p class="small">Dieciséis duelos entre ocho valores laborales producen un orden de prioridades personal, insumo clave para el proyecto de vida.</p></div>
+        <div class="card"><b>🏕️ Estilo de comportamiento — evaluación basada en juego</b><p class="small">Una misión de rescate en el tepuy Roraima registra decisiones, tiempos, riesgo asumido, reparto de recursos, consulta de información y persistencia ante el error. Se interpreta con un modelo de dos ejes —ritmo (acelerado/pausado) y foco (tareas/personas)— de la tradición de los estilos sociales (Merrill y Reid), que da cuatro estilos: Pionero, Inspirador, Guardián y Estratega. Incluye un índice de confianza del perfil.</p></div>
       </div>
       <h2 style="margin-top:24px">Gamificación y metodologías ágiles</h2>
       <div class="card"><ul>

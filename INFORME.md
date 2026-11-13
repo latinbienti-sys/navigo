@@ -35,12 +35,44 @@ Navigo es una ruta de juego por paisajes venezolanos. Cada estación capta una d
 | 2 | Médanos de Coro | Habilidades | 5 minijuegos: memoria, lógica, verbal, cálculo y creatividad (usos de una tapara) | Desafíos de Aventúrate; pruebas de aptitud |
 | 3 | Relámpago del Catatumbo | Comportamientos y habilidades blandas | 8 situaciones de juicio situacional (liceo y comunidad) | Competencias genéricas de la G.O. 38.924 (Carmona, 2022) |
 | 4 | Salto Ángel, Canaima | Valores | 16 duelos por pares entre 8 valores laborales | Jerarquía de valores laborales |
-| 5 | Archipiélago Los Roques | Información del mundo laboral | Tendencias, reto «¿Mito o realidad?» y explorador de carreras | WEF 2025; contexto venezolano |
-| 6 | Pico Bolívar | Integración | Carta de navegación con perfil, afinidad con 38 carreras y oficios y un plan en *sprints* | Proyecto de vida y metodología ágil |
+| 5 | Tepuy Roraima | Estilo de comportamiento | Misión de rescate de 10 escenas con métricas implícitas | Evaluación basada en juego; modelo de dos ejes ritmo × foco (estilos sociales, Merrill y Reid) |
+| 6 | Archipiélago Los Roques | Información del mundo laboral | Tendencias, reto «¿Mito o realidad?» y explorador de carreras | WEF 2025; contexto venezolano |
+| 7 | Pico Bolívar | Integración | Carta de navegación con perfil, afinidad con 38 carreras y oficios y un plan en *sprints* | Proyecto de vida y metodología ágil |
+
+### 4.1 Expedición al tepuy: evaluación del estilo basada en juego
+
+Esta estación capta **cómo actúa** el estudiante, además de lo que dice preferir. Lo hace con una misión narrativa: coordinar el rescate de unos científicos atrapados en el Roraima antes de que llegue la tormenta. Antes de empezar se le informa que se observará su forma de decidir, pero no qué opción corresponde a cada estilo.
+
+**Modelo.** Se usan dos ejes de la tradición de los estilos sociales (Merrill y Reid): el **ritmo**, acelerado o pausado, y el **foco**, en las tareas o en las personas. De su combinación salen cuatro tendencias:
+
+| Tendencia | Ejes | Estilo | Reto de crecimiento |
+|---|---|---|---|
+| Acción | Acelerado + tareas | Pionero | Escuchar y medir los riesgos |
+| Conexión | Acelerado + personas | Inspirador | Aterrizar los detalles y cerrar lo que empieza |
+| Calma | Pausado + personas | Guardián | Opinar y adaptarse a los cambios |
+| Precisión | Pausado + tareas | Estratega | Decidir sin tener toda la información |
+
+**Qué se registra (evidencias conductuales):**
+1. **Elecciones** en 7 dilemas de 4 opciones, que se muestran en orden aleatorio. Cada opción suma puntos ocultos a una tendencia.
+2. **Tiempo de decisión.** Se le descuenta un tiempo de lectura estimado de 22 ms por carácter y se toma la mediana. Si es menor de 3 s suma a Acción y Conexión; si es mayor de 7 s, a Precisión y Calma.
+3. **Riesgo asumido.** Cuatro escenas tienen opciones con un nivel de riesgo entre 0 y 1 (por ejemplo, la grieta frente al sendero seguro).
+4. **Reparto de 12 raciones** entre el propio equipo, los rescatados y una reserva. Mide la cooperación y la previsión.
+5. **Consulta de la bitácora.** El botón 🔍 es opcional y registra la búsqueda de información.
+6. **Cruce del río.** Es un juego de secuencias de memoria con errores posibles. Registra los fallos, los reintentos y si el estudiante se rinde, lo que da la persistencia.
+
+**Resultados:**
+- La distribución porcentual de las cuatro tendencias (suma 100 %), el estilo principal y el secundario.
+- Un **mapa de cuadrantes** con la posición del estudiante.
+- Cinco indicadores de 0 a 100: tolerancia al riesgo, cooperación, previsión, búsqueda de información y persistencia, además del ritmo en segundos.
+- Un **índice de confianza** (alta, media o baja). Baja cuando la mitad o más de las decisiones se tomaron en menos de 2,5 s o cuando las dos tendencias principales difieren en menos de 5 puntos. En el panel del orientador esos casos aparecen señalados para revisarlos en la entrevista.
+
+**Integración.** El estilo se traduce a una afinidad con las letras RIASEC: Acción con R, Precisión con I, Conexión con A, Conexión y Calma con S, Acción y Conexión con E, y Precisión y Calma con C. Pesa el 7 % en la afinidad con cada carrera.
+
+**Cautelas.** La literatura sobre evaluaciones basadas en juego indica que mejoran la experiencia del participante, pero su validez predictiva es modesta y depende del modelo que las sustenta (Ramos-Villagrasa y Fernández-del-Río, 2023). Por eso el estilo es un insumo de conversación con poco peso en la recomendación, y su confiabilidad (test-retest) debe estudiarse en el piloto.
 
 **Mecánicas de juego:** experiencia (XP), rangos náuticos (de Grumete a Almirante), insignias, desbloqueo progresivo de estaciones, retroalimentación inmediata, retos con tiempo, confeti y celebraciones, y compañeros de viaje de la fauna venezolana.
 
-**Cómo se calcula la afinidad con cada carrera:** intereses RIASEC con pesos 3-2-1 sobre el código de la carrera (55 %), habilidades (20 %), valores (15 %) y competencias blandas (10 %). Los resultados se muestran como «rutas para explorar», no como un veredicto.
+**Cómo se calcula la afinidad con cada carrera:** intereses RIASEC con pesos 3-2-1 sobre el código de la carrera (50 %), habilidades (20 %), valores (15 %), competencias blandas (8 %) y estilo de comportamiento (7 %). Los resultados se muestran como «rutas para explorar», no como un veredicto.
 
 **Componente ágil:** el proyecto de vida se gestiona en *sprints* de 30 días con un tablero Kanban (Por hacer, Haciendo, Hecho). Las metas iniciales se generan a partir del perfil. Al cerrar un sprint se hace una «retrospectiva» que da XP e insignias.
 
@@ -82,4 +114,6 @@ Los minijuegos y las escalas son **instrumentos de exploración, no tests psicom
 - World Economic Forum (2025). [Future of Jobs Report 2025](https://www.weforum.org/publications/the-future-of-jobs-report-2025/digest/) y [nota de prensa](https://www.weforum.org/media/future-of-jobs-report-2025-78-million-new-job-opportunities-by-2030-but-urgent-upskilling-needed-to-prepare-workforces/).
 - [Gamificación como herramientas para promover la madurez vocacional en estudiantes de bachillerato (REDINED)](https://redined.educacion.gob.es/xmlui/handle/11162/257563).
 - [El Diario (2025): bachilleres y carreras largas](https://eldiario.com/2025/07/23/bachilleres-egresados-escuelas-privadas-estudiar-carreras-largas/); [Diario de Los Andes: estudio UCAB](https://diariodelosandes.com/disminuye-el-numero-de-estudiantes-que-planea-emigrar-despues-de-graduarse-segun-estudio-de-la-ucab); [El Diario (2026): profesionales que cambian a oficios](https://eldiario.com/2026/04/20/cambio-carrera-profesionales-oficios-bajos-salarios/).
+- Ramos-Villagrasa, P. J. y Fernández-del-Río, E. (2023). [Predictive validity, applicant reactions, and influence of personal characteristics of a gamefully designed assessment](https://journals.copmadrid.org/jwop/art/jwop2023a18). *Journal of Work and Organizational Psychology, 39*(3), 169-178.
+- Merrill, D. W. y Reid, R. H. (1981). *Personal Styles & Effective Performance.* Chilton.
 - Holland, J. L. (1997). *Making Vocational Choices.* PAR.

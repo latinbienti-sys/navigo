@@ -229,12 +229,105 @@ window.NAVIGO_DATA = (function () {
     { n: "Logística y comercio exterior", code: "CER", apt: ["numerica", "logica"], comp: ["analitico", "adaptabilidad"], val: ["economia", "aventura"], tag: "emergente", d: "Organiza el movimiento de productos en cadenas globales.", donde: ["Administración / TSU en Comercio"] }
   ];
 
+  // ---------- Estilo de comportamiento (Expedición al tepuy) ----------
+  // Modelo de dos ejes: RITMO (acelerado ↔ pausado) × FOCO (tareas ↔ personas).
+  //   Acción    = ritmo acelerado + foco en tareas
+  //   Conexión  = ritmo acelerado + foco en personas
+  //   Calma     = ritmo pausado   + foco en personas
+  //   Precisión = ritmo pausado   + foco en tareas
+  const TENDENCIAS_ESTILO = {
+    accion: { nombre: "Acción", estilo: "Pionero", color: "#e0464f", eje: "Ritmo acelerado · foco en la tarea",
+      desc: "Decides rápido, te orientas a resultados y te animas con los retos. Tomas la iniciativa cuando otros dudan.",
+      reto: "Escuchar antes de decidir y medir los riesgos." },
+    conexion: { nombre: "Conexión", estilo: "Inspirador", color: "#ffb020", eje: "Ritmo acelerado · foco en las personas",
+      desc: "Contagias entusiasmo, comunicas con facilidad y movilizas al grupo con tu energía.",
+      reto: "Aterrizar las ideas en detalles y cerrar lo que empiezas." },
+    calma: { nombre: "Calma", estilo: "Guardián", color: "#21a67a", eje: "Ritmo pausado · foco en las personas",
+      desc: "Eres paciente, leal y cooperador. Cuidas que nadie se quede atrás y das estabilidad al equipo.",
+      reto: "Expresar tu opinión y adaptarte a cambios repentinos." },
+    precision: { nombre: "Precisión", estilo: "Estratega", color: "#2f7de0", eje: "Ritmo pausado · foco en la tarea",
+      desc: "Analizas, buscas información y cuidas la calidad. Prefieres decidir con datos y criterios claros.",
+      reto: "Decidir aunque falte información y tolerar la imperfección." }
+  };
+
+  // Escenas de la misión. p: puntos ocultos por tendencia; r: nivel de riesgo (0–1) cuando aplica.
+  const MISION = [
+    { tipo: "eleccion", s: "Al pie del tepuy Roraima, el guía pemón te cuenta que un equipo de científicos quedó atrapado en la cima por la neblina. La tormenta llega en pocas horas. Eres quien coordina la expedición.",
+      info: "Pronóstico: lluvia fuerte en 6 horas. Equipo disponible: 6 personas, 2 radios, 1 botiquín.",
+      o: [
+        { t: "Salimos ya mismo: cada minuto cuenta.", p: { accion: 2 } },
+        { t: "Reúno a todos, explico la misión y les doy ánimo.", p: { conexion: 2 } },
+        { t: "Pregunto cómo está cada quien y si alguien necesita apoyo.", p: { calma: 2 } },
+        { t: "Reviso el mapa, el pronóstico y el equipo antes de salir.", p: { precision: 2 } }
+      ] },
+    { tipo: "riesgo", s: "Hay tres caminos para subir. ¿Cuál eliges?",
+      info: "Reportes de guardaparques: la grieta tuvo un derrumbe pequeño la semana pasada.",
+      o: [
+        { t: "🧗 La grieta: 2 horas, pero puede haber derrumbes.", p: { accion: 2 }, r: 1 },
+        { t: "🥾 El paso del río: 3,5 horas, riesgo moderado.", p: { conexion: 1, precision: 1 }, r: 0.5 },
+        { t: "🛤️ El sendero largo: 5 horas, totalmente seguro.", p: { calma: 2 }, r: 0 }
+      ] },
+    { tipo: "recursos", s: "Tienes 12 raciones de comida y agua. Repártelas como creas mejor.",
+      grupos: [
+        { k: "propio", t: "Tu equipo (para mantener la fuerza)" },
+        { k: "rescate", t: "Los científicos atrapados" },
+        { k: "reserva", t: "Reserva para imprevistos" }
+      ], total: 12 },
+    { tipo: "eleccion", s: "A mitad de la subida, dos compañeros discuten fuerte por quién carga la mochila más pesada.",
+      o: [
+        { t: "Decido yo quién la lleva y seguimos: no hay tiempo.", p: { accion: 2 } },
+        { t: "Hago una broma para bajar la tensión y los animo.", p: { conexion: 2 } },
+        { t: "Escucho a los dos con calma y buscamos un acuerdo.", p: { calma: 2 } },
+        { t: "Propongo turnos de 20 minutos, medidos con el reloj.", p: { precision: 2 } }
+      ] },
+    { tipo: "piedras", s: "Para cruzar el río hay que pisar las piedras firmes en el orden correcto. Observa la secuencia y repítela." },
+    { tipo: "eleccion", s: "La neblina lo cubre todo y la brújula empieza a fallar.",
+      info: "El teléfono tiene 40 % de batería y el mapa offline descargado.",
+      o: [
+        { t: "Sigo mi instinto: recuerdo bien por dónde veníamos.", p: { accion: 2 }, r: 1 },
+        { t: "Mantengo la moral del grupo cantando y hablando.", p: { conexion: 2 }, r: 0.5 },
+        { t: "Nos quedamos juntos y esperamos a que despeje.", p: { calma: 2 }, r: 0 },
+        { t: "Uso el GPS y las coordenadas para ubicarnos.", p: { precision: 2 }, r: 0.25 }
+      ] },
+    { tipo: "eleccion", s: "¡Encuentras a los científicos! Una de ellas tiene un tobillo lesionado.",
+      info: "El botiquín incluye vendas elásticas, analgésicos y una férula plegable.",
+      o: [
+        { t: "La ayudamos a caminar y bajamos de inmediato.", p: { accion: 2 } },
+        { t: "Le hablo para tranquilizarla y subirle el ánimo.", p: { conexion: 2 } },
+        { t: "La atiendo con paciencia y reparto su carga entre todos.", p: { calma: 2 } },
+        { t: "Aplico paso a paso el protocolo de primeros auxilios.", p: { precision: 2 } }
+      ] },
+    { tipo: "eleccion", s: "El guía te propone que lideres el descenso con el grupo completo.",
+      o: [
+        { t: "¡Acepto! Me gusta llevar el timón.", p: { accion: 2 } },
+        { t: "Acepto si lo hacemos entre todos, motivando al grupo.", p: { conexion: 2 } },
+        { t: "Prefiero apoyar a quien lidere; ahí aporto más.", p: { calma: 2 } },
+        { t: "Acepto después de revisar ruta, tiempos y riesgos.", p: { precision: 2 } }
+      ] },
+    { tipo: "eleccion", s: "Empieza a llover. El reglamento del parque prohíbe acampar en la cima, pero bajar de noche es peligroso.",
+      info: "Artículo 12 del reglamento: se permite el uso de refugios señalizados en caso de emergencia climática.",
+      o: [
+        { t: "Bajamos ahora mismo, aunque sea de noche.", p: { accion: 2 }, r: 1 },
+        { t: "Llamo por radio a los guardaparques y los convenzo.", p: { conexion: 2 }, r: 0.5 },
+        { t: "Esperamos las instrucciones de los guardaparques.", p: { calma: 2 }, r: 0 },
+        { t: "Busco en el reglamento si hay refugios de emergencia.", p: { precision: 2 }, r: 0.25 }
+      ] },
+    { tipo: "eleccion", s: "Misión cumplida: todos llegan a salvo al campamento base. ¿Qué haces primero?",
+      o: [
+        { t: "Pienso en cuál será el próximo reto.", p: { accion: 2 } },
+        { t: "Celebro con todos y agradezco a cada uno.", p: { conexion: 2 } },
+        { t: "Me aseguro de que todos coman y descansen.", p: { calma: 2 } },
+        { t: "Anoto lo que funcionó y lo que mejoraría.", p: { precision: 2 } }
+      ] }
+  ];
+
   // ---------- Estaciones del mapa ----------
   const ESTACIONES = [
     { id: "intereses", lugar: "Sierra Nevada de Mérida", titulo: "Brújula de intereses", icono: "🏔️", color: "#2f7de0", desc: "Descubre qué actividades te encienden. 30 cartas: decide rápido, sin pensarlo mucho.", xp: 200 },
     { id: "habilidades", lugar: "Médanos de Coro", titulo: "Desafíos de habilidades", icono: "🏜️", color: "#e07a2f", desc: "Cinco minijuegos que miden memoria, lógica, lenguaje, cálculo y creatividad.", xp: 250 },
     { id: "competencias", lugar: "Relámpago del Catatumbo", titulo: "La tormenta de la tripulación", icono: "⚡", color: "#7a5af5", desc: "Situaciones reales del liceo y la comunidad: ¿cómo actúas? Revela tus habilidades blandas.", xp: 160 },
     { id: "valores", lugar: "Salto Ángel – Canaima", titulo: "Brújula de valores", icono: "🌊", color: "#21a67a", desc: "Elige entre dos caminos. Descubre lo que más te importa en tu vida profesional.", xp: 160 },
+    { id: "expedicion", lugar: "Tepuy Roraima", titulo: "Expedición al tepuy", icono: "🏕️", color: "#c27c0e", desc: "Una misión de rescate llena de decisiones. No hay respuestas correctas: solo tu forma de actuar.", xp: 180 },
     { id: "mundo", lugar: "Archipiélago Los Roques", titulo: "Puerto del futuro", icono: "🏝️", color: "#0aa5b8", desc: "Tendencias del mundo laboral y el reto «¿Mito o realidad?».", xp: 180 },
     { id: "carta", lugar: "Pico Bolívar", titulo: "Tu carta de navegación", icono: "🧭", color: "#e0464f", desc: "Tu perfil completo, las carreras que mejor encajan contigo y tu plan de vida en sprints.", xp: 100 }
   ];
@@ -252,5 +345,5 @@ window.NAVIGO_DATA = (function () {
   const HOBBIES = ["Deportes", "Música", "Videojuegos", "Dibujo", "Lectura", "Redes sociales", "Cocina", "Naturaleza", "Tecnología", "Baile", "Voluntariado", "Mecánica"];
   const MATERIAS = ["Matemática", "Física", "Química", "Biología", "Castellano", "Inglés", "Historia", "Geografía", "Arte", "Educación física", "Informática", "Orientación y convivencia"];
 
-  return { RIASEC, INTERESES, APTITUDES, LOGICA, VERBAL, MEMORIA_FICHAS, COMPETENCIAS, ESCENARIOS, VALORES, TENDENCIAS, MITOS, CARRERAS, ESTACIONES, RANGOS, COMPANEROS, HOBBIES, MATERIAS };
+  return { TENDENCIAS_ESTILO, MISION, RIASEC, INTERESES, APTITUDES, LOGICA, VERBAL, MEMORIA_FICHAS, COMPETENCIAS, ESCENARIOS, VALORES, TENDENCIAS, MITOS, CARRERAS, ESTACIONES, RANGOS, COMPANEROS, HOBBIES, MATERIAS };
 })();
