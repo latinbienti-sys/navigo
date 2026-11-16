@@ -201,8 +201,10 @@
   };
 
   // ===== Mapa =====
-  const POS_WIDE = [[9, 74], [23, 30], [37, 72], [51, 30], [65, 72], [78, 30], [90, 68]];
-  const POS_NARROW = [[26, 91], [72, 78], [28, 65], [72, 52], [28, 39], [72, 26], [30, 11]];
+  const POS_WIDE = [[8, 76], [20, 32], [32, 72], [44, 30], [56, 72], [68, 30], [79, 72], [91, 26]];
+  const POS_NARROW = [[26, 92], [72, 80], [28, 68], [72, 56], [28, 44], [72, 32], [28, 20], [70, 8]];
+  const lugares = (c, max = 4) => { const l = c.donde || []; return l.slice(0, max).map(esc).join(" · ") + (l.length > max ? ` · <i>y ${l.length - max} más</i>` : ""); };
+  const areaDe = (c) => (D.AREAS && D.AREAS[c.area]) || { nombre: "Otras", icono: "📌" };
   VIEWS.mapa = function () {
     const narrow = window.innerWidth <= 640;
     const pos = narrow ? POS_NARROW : POS_WIDE;
@@ -773,10 +775,17 @@
   // ===== 6. Mundo laboral =====
   VIEWS.mundo = function (arg) {
     const e = est("mundo");
-    let filtro = "todas", tipo = "todas";
+    let filtro = "todas", tipo = "todas", area = "todas", estado = "todos", q = "", limite = 24;
+    const norm = (s) => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     function explorer() {
-      const list = D.CARRERAS.filter((c) => (filtro === "todas" || c.code.includes(filtro)) && (tipo === "todas" || c.tag === tipo));
-      return list.map((c) => `<div class="card career"><div class="row" style="justify-content:space-between"><b>${esc(c.n)}</b><span class="tag ${c.tag}">${c.tag}</span></div><div class="small">${esc(c.d)}</div><div class="where">📍 ${c.donde.map(esc).join(" · ")}</div><div class="small muted">Intereses: ${[...c.code].map((k) => D.RIASEC[k].nombre).join(", ")}</div></div>`).join("") || '<p class="muted">No hay carreras con ese filtro.</p>';
+      const list = D.CARRERAS.filter((c) => (filtro === "todas" || c.code.includes(filtro)) && (tipo === "todas" || c.tag === tipo)
+        && (area === "todas" || c.area === area)
+        && (estado === "todos" || (c.estados || []).includes(estado) || (c.estados || []).includes("Nacional"))
+        && (!q || norm(c.n + " " + c.d).includes(norm(q))));
+      const cards = list.slice(0, limite).map((c) => `<div class="card career"><div class="row" style="justify-content:space-between"><b>${esc(c.n)}</b><span class="tag ${c.tag}">${c.tag}</span></div><div class="small muted">${areaDe(c).icono} ${esc(areaDe(c).nombre)}</div><div class="small">${esc(c.d)}</div><div class="where">📍 ${lugares(c)}</div><div class="small muted">Intereses: ${[...c.code].map((k) => D.RIASEC[k].nombre).join(", ")}</div></div>`).join("");
+      $("#expCount").textContent = `${list.length} de ${D.CARRERAS.length} carreras y oficios`;
+      $("#more").hidden = list.length <= limite;
+      return cards || '<p class="muted">No hay carreras con ese filtro.</p>';
     }
     app.innerHTML = `${backBtn()}${stHead(e)}
       <h3>🌐 Tendencias que mueven el mundo del trabajo</h3>
@@ -784,14 +793,28 @@
 
       <div class="card stack" style="margin-top:20px" id="mitos"></div>
 
-      <h3 style="margin-top:24px">🔎 Explora carreras y oficios</h3>
-      <div class="row" id="fR">${["todas", "R", "I", "A", "S", "E", "C"].map((k) => `<button class="chip" data-f="${k}" aria-pressed="${k === "todas"}">${k === "todas" ? "Todos los intereses" : D.RIASEC[k].nombre}</button>`).join("")}</div>
+      <h3 style="margin-top:24px">🔎 Explora las carreras de Venezuela</h3>
+      <p class="muted small">Catálogo nacional: universidades públicas y privadas, programas nacionales de formación (PNF) y oficios técnicos.</p>
+      <div class="grid g3" style="gap:10px">
+        <label class="field" style="margin:0">Buscar<input id="fq" placeholder="Ej.: medicina, diseño, petróleo…" autocomplete="off"></label>
+        <label class="field" style="margin:0">Área de conocimiento<select id="fA"><option value="todas">Todas las áreas</option>${Object.entries(D.AREAS || {}).map(([k, a]) => `<option value="${k}">${a.icono} ${esc(a.nombre)}</option>`).join("")}</select></label>
+        <label class="field" style="margin:0">¿Dónde quieres estudiar?<select id="fE"><option value="todos">Todo el país</option>${(D.ESTADOS_VE || []).map((s) => `<option>${esc(s)}</option>`).join("")}</select></label>
+      </div>
+      <div class="row" id="fR" style="margin-top:10px">${["todas", "R", "I", "A", "S", "E", "C"].map((k) => `<button class="chip" data-f="${k}" aria-pressed="${k === "todas"}">${k === "todas" ? "Todos los intereses" : D.RIASEC[k].nombre}</button>`).join("")}</div>
       <div class="row" id="fT" style="margin-top:8px">${["todas", "emergente", "consolidada", "oficio"].map((k) => `<button class="chip" data-t="${k}" aria-pressed="${k === "todas"}">${k === "todas" ? "Todos los tipos" : k}</button>`).join("")}</div>
-      <div class="grid g3" id="exp" style="margin-top:14px">${explorer()}</div>
-      <p class="muted small" style="margin-top:10px">La oferta académica cambia: confirma carreras y requisitos en el sitio de cada universidad y en el Sistema Nacional de Ingreso (OPSU).</p>`;
+      <p class="small" style="margin:12px 0 0"><b id="expCount"></b></p>
+      <div class="grid g3" id="exp" style="margin-top:10px"></div>
+      <div class="center" style="margin-top:12px"><button class="btn ghost sm" id="more">Ver más carreras</button></div>
+      <p class="muted small" style="margin-top:10px">La oferta académica cambia cada año: confirma carreras, sedes y requisitos en el <b>Libro de Oportunidades de Estudio</b> del Sistema Nacional de Ingreso (sni.opsu.gob.ve) y en el sitio de cada universidad.</p>`;
 
-    $("#fR").addEventListener("click", (ev) => { const b = ev.target.closest(".chip"); if (!b) return; filtro = b.dataset.f; $$("#fR .chip").forEach((x) => x.setAttribute("aria-pressed", x === b)); $("#exp").innerHTML = explorer(); });
-    $("#fT").addEventListener("click", (ev) => { const b = ev.target.closest(".chip"); if (!b) return; tipo = b.dataset.t; $$("#fT .chip").forEach((x) => x.setAttribute("aria-pressed", x === b)); $("#exp").innerHTML = explorer(); });
+    const refresh = (reset = true) => { if (reset) limite = 24; $("#exp").innerHTML = explorer(); };
+    refresh();
+    $("#fR").addEventListener("click", (ev) => { const b = ev.target.closest(".chip"); if (!b) return; filtro = b.dataset.f; $$("#fR .chip").forEach((x) => x.setAttribute("aria-pressed", x === b)); refresh(); });
+    $("#fT").addEventListener("click", (ev) => { const b = ev.target.closest(".chip"); if (!b) return; tipo = b.dataset.t; $$("#fT .chip").forEach((x) => x.setAttribute("aria-pressed", x === b)); refresh(); });
+    $("#fq").addEventListener("input", (ev) => { q = ev.target.value.trim(); refresh(); });
+    $("#fA").addEventListener("change", (ev) => { area = ev.target.value; refresh(); });
+    $("#fE").addEventListener("change", (ev) => { estado = ev.target.value; refresh(); });
+    $("#more").addEventListener("click", () => { limite += 24; refresh(false); });
 
     // Reto ¿Mito o realidad?
     const box = $("#mitos");
@@ -823,6 +846,467 @@
     }
     mito();
   };
+
+  // ===== 7. Teleférico Mukumbarí: fase final jugable =====
+  // Diseño de evaluación: Evidence-Centered Design / evaluación encubierta (Mislevy; Shute).
+  // Criterios: NOTECHS/CRM (decisiones, cooperación, liderazgo), conciencia situacional (Endsley),
+  // propensión al riesgo conductual tipo BART (Lejuez et al., 2002) y competencias socioemocionales CASEL.
+  const TRAMOS = [
+    { de: "Barinitas", a: "La Montaña", alt: [1577, 2436], viento: 10, rafaga: [26, 34], suelo: "#3f8f4f" },
+    { de: "La Montaña", a: "La Aguada", alt: [2436, 3452], viento: 14, rafaga: [30, 40], suelo: "#5f9447" },
+    { de: "La Aguada", a: "Loma Redonda", alt: [3452, 4045], viento: 18, rafaga: [34, 44], suelo: "#8d9a52" },
+    { de: "Loma Redonda", a: "Pico Espejo", alt: [4045, 4765], viento: 22, rafaga: [36, 48], suelo: "#7d7d86" }
+  ];
+  const TEL_EVENTOS = [
+    { s: "📡 El centro de control avisa: ráfagas laterales de 45 km/h en el próximo tramo. Llevas 60 pasajeros, entre ellos varios niños.",
+      info: "Límite de operación: 60 km/h de viento. Protocolo: con viento mayor a 40 km/h, reducir la velocidad al 50 % e informar a los pasajeros.",
+      o: [
+        { t: "Mantengo la velocidad: todavía estamos bajo el límite.", q: 0.3, r: 1, l: 1, f: "Las ráfagas te tomarán con más fuerza en este tramo." },
+        { t: "Reduzco la velocidad a la mitad y explico la situación por el altavoz.", q: 1, r: 0.3, b: 2, l: 1, bien: 10, f: "Pasajeros tranquilos: aplicaste el protocolo." },
+        { t: "Detengo la cabina hasta que pase el viento.", q: 0.6, r: 0, bien: -4, f: "Seguro, pero el viaje se retrasa y los pasajeros se impacientan." },
+        { t: "Consulto con el jefe de estación y decidimos juntos.", q: 0.8, r: 0.2, e: 2, f: "Buena coordinación: el equipo confirma el protocolo." }
+      ] },
+    { s: "🤢 Una pasajera mayor se siente mareada por la altura (soroche) y otros pasajeros empiezan a ponerse nerviosos.",
+      info: "En La Aguada hay paramédicos y oxígeno. Regresar a La Montaña toma 15 minutos más.",
+      o: [
+        { t: "Sigo a velocidad segura hasta La Aguada y pido por radio que los paramédicos esperen.", q: 1, r: 0.3, e: 2, l: 1, b: 1, bien: 8, f: "Los paramédicos ya esperan en el andén." },
+        { t: "Doy la vuelta y regreso a La Montaña.", q: 0.5, r: 0, bien: -6, f: "La señora es atendida, pero el retraso es grande." },
+        { t: "Le pido a un pasajero que la atienda y sigo sin decir nada más.", q: 0.3, r: 0.6, l: 1, bien: -8, f: "Los demás pasajeros siguen nerviosos." },
+        { t: "Hablo con calma a todos, explico qué pasa y pido que le den espacio y aire.", q: 0.8, r: 0.3, b: 2, bien: 12, f: "El ambiente en la cabina se calma." }
+      ] },
+    { s: "⚙️ Un sensor marca una vibración extraña en la polea. El técnico quiere detener todo para revisar; el supervisor dice que es una falsa alarma y que hay que seguir.",
+      info: "Historial: este sensor dio 3 falsas alarmas este mes. Una revisión rápida toma 4 minutos.",
+      o: [
+        { t: "Le hago caso al supervisor: él tiene más autoridad.", q: 0.4, r: 0.8, f: "Seguiste sin verificar: riesgo innecesario." },
+        { t: "Escucho a ambos, pido la revisión rápida de 4 minutos y después decido.", q: 1, r: 0.2, e: 2, l: 2, f: "Revisión hecha: era una falsa alarma. ¡Bien gestionado!" },
+        { t: "Detengo todo hasta hacer una revisión completa, cueste lo que cueste.", q: 0.7, r: 0, l: 1, bien: -5, f: "Muy seguro, pero el retraso molesta a los pasajeros." },
+        { t: "Decido yo seguir: no hay tiempo que perder.", q: 0.2, r: 1, l: 1, f: "Decisión arriesgada y sin escuchar al equipo." }
+      ] },
+    { s: "⛈️ Llegando a Pico Espejo, una tormenta eléctrica se acerca. Hay 30 turistas arriba esperando la última cabina de bajada, y tu equipo está cansado.",
+      info: "La tormenta llega en unos 20 minutos. Un viaje de bajada completo toma 12 minutos. Reglamento: no operar con descargas eléctricas a menos de 10 km.",
+      o: [
+        { t: "Organizo al equipo: embarque rápido y ordenado, y bajamos de inmediato.", q: 1, r: 0.5, e: 2, l: 2, bien: 6, f: "Todos abordan en orden y bajan antes de la tormenta." },
+        { t: "Les pido esperar en el refugio de la estación hasta que pase la tormenta.", q: 0.6, r: 0.1, b: 1, bien: -4, f: "Seguros, pero pasarán la noche arriba con frío." },
+        { t: "Hago dos viajes rápidos, aunque el segundo sea en plena tormenta.", q: 0.2, r: 1, l: 1, f: "El segundo viaje habría violado el reglamento de seguridad." },
+        { t: "Pido instrucciones a la central y hago exactamente lo que digan.", q: 0.7, r: 0.2, e: 1, f: "La central coordina, pero se pierde tiempo valioso." }
+      ] }
+  ];
+  const CRITERIOS_TEL = {
+    decisiones: { nombre: "Toma de decisiones", marco: "NOTECHS: diagnóstico, opciones, evaluación del riesgo y elección" },
+    analisis: { nombre: "Análisis (conciencia situacional)", corto: "Análisis", marco: "Modelo de Endsley: percepción, comprensión y proyección" },
+    riesgo: { nombre: "Gestión del riesgo", marco: "Seguridad operacional + conducta de riesgo tipo BART (Lejuez et al.)" },
+    equipo: { nombre: "Trabajo en equipo", marco: "NOTECHS / CRM: cooperación y comunicación con el equipo" },
+    liderazgo: { nombre: "Liderazgo", marco: "NOTECHS: autoridad, coordinación y manejo de la carga de trabajo" },
+    blandas: { nombre: "Habilidades socioemocionales", corto: "Habilidades blandas", marco: "CASEL: autogestión, conciencia social y relaciones" }
+  };
+
+  VIEWS.teleferico = function (arg) {
+    const e = est("teleferico");
+    if (S.teleferico && arg !== "repetir") return resultadoTeleferico();
+    app.innerHTML = `${backBtn()}${stHead(e)}
+      <div class="card stack" style="max-width:760px;margin:0 auto">
+        <h3>🚡 Tu misión: operador(a) de la cabina</h3>
+        <p>El Teleférico Mukumbarí sube desde <b>Barinitas (1.577 m)</b> hasta <b>Pico Espejo (4.765 m)</b>. Hoy eres quien opera la cabina. Debes llevar a los pasajeros sanos y salvos por los <b>4 tramos</b>, enfrentando viento, imprevistos y decisiones difíciles.</p>
+        <div class="grid g2">
+          <div><b>🎮 Controles</b><ul class="small">
+            <li><b>▲ Acelerar</b> / <b>▼ Frenar</b>: mantén presionado (o usa las flechas ↑ ↓).</li>
+            <li><b>📢 Avisar</b>: informa a los pasajeros (tecla A).</li>
+            <li><b>📻 Radio</b>: responde cuando una estación te llame (tecla R).</li></ul></div>
+          <div><b>⚠️ Reglas</b><ul class="small">
+            <li>Cuando veas <b>«RÁFAGA»</b>, frena antes de que llegue.</li>
+            <li>Si el <b>balanceo</b> llega al 100 %, hay parada de emergencia y repites el tramo.</li>
+            <li>Cuida el <b>bienestar</b> de tus pasajeros.</li></ul></div>
+        </div>
+        <p class="small muted">Primero cargarás los suministros para la estación de Pico Espejo. Duración aproximada: 6 minutos.</p>
+        <div><button class="btn sun" id="tgo">Encender el teleférico →</button></div>
+      </div>`;
+    $("#tgo").addEventListener("click", carga);
+
+    const R = { bart: { rondas: [], explosiones: 0, puntos: 0 } };
+
+    // --- Fase A: Carga de suministros (tarea de riesgo análoga al BART) ---
+    function carga() {
+      const RONDAS = 8;
+      let ronda = 0, cajas = 0, cap = 0;
+      function nueva() { cajas = 0; cap = 1 + Math.floor(Math.random() * 12); draw(); }
+      function draw(msg) {
+        app.innerHTML = `${backBtn()}
+          <div class="card stack" style="max-width:640px;margin:0 auto">
+            <div class="row" style="justify-content:space-between"><b>📦 Carga de suministros · Envío ${ronda + 1} de ${RONDAS}</b><b>Puntos: ${R.bart.puntos}</b></div>
+            <p class="small">Cada caja que subas a la cabina de carga vale <b>+5 puntos</b>. Pero cada cabina tiene un <b>límite de peso oculto y distinto</b>: si lo superas, el sensor rechaza el envío y pierdes los puntos de esa cabina. Puedes despachar cuando quieras.</p>
+            <div class="center" style="font-size:2rem;min-height:3.2rem;letter-spacing:2px">${"📦".repeat(cajas) || '<span class="muted small">Cabina vacía</span>'}</div>
+            <p class="center"><b>${cajas * 5}</b> puntos en esta cabina</p>
+            <p class="center small" id="bmsg">${msg || ""}</p>
+            <div class="row" style="justify-content:center"><button class="btn" id="bmas">📦 Subir una caja</button><button class="btn sun" id="bok" ${cajas ? "" : "disabled"}>✅ Despachar</button></div>
+          </div>`;
+        $("#bmas").addEventListener("click", () => {
+          cajas++;
+          if (cajas >= cap) { R.bart.explosiones++; R.bart.rondas.push({ cajas, exploto: true }); fin(`💥 ¡Sobrecarga! El límite era ${cap - 1} cajas.`); }
+          else draw();
+        });
+        $("#bok").addEventListener("click", () => { R.bart.rondas.push({ cajas, exploto: false }); R.bart.puntos += cajas * 5; fin(`✅ Despachado: +${cajas * 5} puntos.`); });
+      }
+      function fin(msg) {
+        ronda++;
+        app.innerHTML = `${backBtn()}<div class="card center stack" style="max-width:640px;margin:0 auto"><h3>${msg}</h3><p>Puntos acumulados: <b>${R.bart.puntos}</b></p></div>`;
+        later(() => (ronda < RONDAS ? nueva() : juego()), 1100);
+      }
+      nueva();
+    }
+
+    // --- Fase B: Operación de la cabina (juego en tiempo real) ---
+    function juego() {
+      app.innerHTML = `${backBtn()}
+        <div class="tel">
+          <div class="tel-hud">
+            <div><span class="muted small">Tramo</span><b id="hTramo"></b></div>
+            <div><span class="muted small">Altitud</span><b id="hAlt"></b></div>
+            <div><span class="muted small">Velocidad</span><b id="hVel"></b></div>
+            <div><span class="muted small">Viento</span><b id="hVien"></b></div>
+          </div>
+          <div class="tel-stage" id="stage">
+            <canvas id="cv" aria-label="Cabina del teleférico Mukumbarí cruzando la montaña"></canvas>
+            <div class="tel-banner" id="banner" hidden></div>
+            <div class="tel-overlay" id="ov" hidden></div>
+          </div>
+          <div class="tel-meters">
+            <div><span class="small"><b>Balanceo</b> <span id="mBalTxt"></span></span><div class="bar big"><span id="mBal"></span></div></div>
+            <div><span class="small"><b>Bienestar de pasajeros</b> <span id="mBienTxt"></span></span><div class="bar big"><span id="mBien" style="background:var(--ok)"></span></div></div>
+          </div>
+          <div class="tel-controls">
+            <button class="btn tel-btn brake" id="cBrake">▼ Frenar</button>
+            <button class="btn tel-btn accel" id="cAccel">▲ Acelerar</button>
+            <button class="btn ghost tel-btn" id="cAviso">📢 Avisar</button>
+            <button class="btn ghost tel-btn" id="cRadio" disabled>📻 Radio</button>
+          </div>
+        </div>`;
+
+      const cv = $("#cv"), ctx = cv.getContext("2d");
+      const G = {
+        tramo: 0, p: 0, v: 3, sway: 0, swayVel: 0, bien: 80, wind: 10, t: 0, paused: false, over: false,
+        gust: { st: "none", t: 0, str: 0, braked: false }, nextGust: 3.5, boost: 0,
+        accel: false, brake: false, radio: { st: "none", t: 0, at: 0, used: false }, aviso: false, decision: false,
+        emergTramo: 0, asistido: false, radioHecha: {}, decisionHecha: {},
+        s: { emergencias: 0, gusts: 0, anticip: 0, percib: 0, gustSpeeds: [], radioOK: 0, radioTotal: 0, avisos: 0, data: 0, dec: [], tiempo: 0 }
+      };
+      const parts = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random(), l: 0.02 + Math.random() * 0.04 }));
+      let W = 0, H = 0, dpr = 1;
+      function resize() {
+        const stage = $("#stage"); if (!stage) return;
+        dpr = window.devicePixelRatio || 1;
+        W = stage.clientWidth; H = Math.round(clamp(W * 0.56, 240, 470));
+        cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resize(); listen(window, "resize", resize);
+      function inicioTramo() {
+        G.p = 0; G.v = 3; G.sway = 0; G.swayVel = 0; G.gust = { st: "none", t: 0, str: 0, braked: false }; G.nextGust = 3 + Math.random() * 2; G.boost = 0;
+        G.radio = { st: "none", t: 0, at: Math.random() < 0.5 ? 22 + Math.random() * 18 : 68 + Math.random() * 18, used: !!G.radioHecha[G.tramo] };
+        G.aviso = false; G.decision = !!G.decisionHecha[G.tramo];
+        $("#cAviso").disabled = false; $("#cRadio").disabled = true; $("#cRadio").classList.remove("glow");
+      }
+      inicioTramo();
+
+      // Controles
+      const hold = (id, k) => {
+        const b = $(id);
+        const on = (ev) => { ev.preventDefault(); G[k] = true; b.classList.add("on"); };
+        const off = () => { G[k] = false; b.classList.remove("on"); };
+        b.addEventListener("pointerdown", on); ["pointerup", "pointerleave", "pointercancel"].forEach((x) => b.addEventListener(x, off));
+      };
+      hold("#cAccel", "accel"); hold("#cBrake", "brake");
+      $("#cAviso").addEventListener("click", avisar);
+      $("#cRadio").addEventListener("click", responder);
+      listen(document, "keydown", (ev) => {
+        if (["ArrowUp", "w", "W"].includes(ev.key)) { G.accel = true; ev.preventDefault(); }
+        if (["ArrowDown", "s", "S", " "].includes(ev.key)) { G.brake = true; ev.preventDefault(); }
+        if (ev.key === "a" || ev.key === "A") avisar();
+        if (ev.key === "r" || ev.key === "R") responder();
+      });
+      listen(document, "keyup", (ev) => {
+        if (["ArrowUp", "w", "W"].includes(ev.key)) G.accel = false;
+        if (["ArrowDown", "s", "S", " "].includes(ev.key)) G.brake = false;
+      });
+      function avisar() {
+        if (G.aviso || G.paused) return;
+        G.aviso = true; G.s.avisos++; G.bien = clamp(G.bien + 12, 0, 100); $("#cAviso").disabled = true;
+        banner("📢 «Estimados pasajeros: todo está bajo control. Les mantendremos informados.»", "info", 2200);
+      }
+      function responder() {
+        if (G.radio.st !== "pend") return;
+        G.radio.st = "ok"; G.s.radioOK++; $("#cRadio").disabled = true; $("#cRadio").classList.remove("glow");
+        banner(`📻 Confirmado. La estación ${TRAMOS[G.tramo].a} recibe tu posición.`, "info", 1800);
+      }
+      let bT;
+      function banner(txt, tipo, ms) {
+        const b = $("#banner"); if (!b) return;
+        b.textContent = txt; b.className = "tel-banner " + (tipo || ""); b.hidden = false;
+        clearTimeout(bT); if (ms) bT = setTimeout(() => { if ($("#banner")) $("#banner").hidden = true; }, ms);
+      }
+
+      function overlay(html) { const o = $("#ov"); o.innerHTML = html; o.hidden = false; G.paused = true; }
+      function cerrarOverlay() { const o = $("#ov"); o.hidden = true; o.innerHTML = ""; G.paused = false; }
+
+      function emergencia() {
+        G.s.emergencias++; G.emergTramo++;
+        if (G.emergTramo >= 2 && !G.asistido) G.asistido = true;
+        G.accel = G.brake = false;
+        overlay(`<div class="tel-modal"><h3>🚨 Parada de emergencia</h3><p>La cabina se balanceó demasiado y el sistema de seguridad la detuvo. Los pasajeros están bien, pero hay que reiniciar el tramo.</p>
+          ${G.asistido ? '<p class="small">🛟 El centro de control activó el <b>modo asistido</b>: las ráfagas serán más suaves.</p>' : '<p class="small">Consejo: cuando aparezca «RÁFAGA», frena antes de que llegue.</p>'}
+          <button class="btn sun" id="rt">Reiniciar el tramo</button></div>`);
+        $("#rt").addEventListener("click", () => { inicioTramo(); cerrarOverlay(); });
+      }
+
+      function decision() {
+        G.decision = true; G.decisionHecha[G.tramo] = true; G.accel = G.brake = false;
+        const ev = TEL_EVENTOS[G.tramo], opts = shuffle(ev.o), t0 = performance.now();
+        let restante = 20, vioDatos = false;
+        overlay(`<div class="tel-modal"><div class="row" style="justify-content:space-between"><b>Decisión de operador</b><span class="timer" id="dt">20s</span></div>
+          <p style="font-weight:700">${esc(ev.s)}</p>
+          <div><button class="btn ghost sm" id="dd">📊 Ver datos del centro de control</button><p class="small muted" id="ddTxt" hidden style="margin-top:6px">${esc(ev.info)}</p></div>
+          <div class="opts" style="margin-top:10px">${opts.map((o, n) => `<button class="opt" data-n="${n}">${esc(o.t)}</button>`).join("")}</div></div>`);
+        $("#dd").addEventListener("click", (x) => { x.target.disabled = true; $("#ddTxt").hidden = false; if (!vioDatos) { vioDatos = true; G.s.data++; } });
+        const tick = setInterval(() => { restante--; const el = $("#dt"); if (el) el.textContent = restante + "s"; if (restante <= 0) elegir(null); }, 1000);
+        onCleanup(() => clearInterval(tick));
+        $$("#ov .opt").forEach((b) => b.addEventListener("click", () => elegir(opts[+b.dataset.n])));
+        function elegir(o) {
+          clearInterval(tick);
+          if (G.over) return;
+          const rec = { q: o ? o.q : 0, r: o ? o.r : 0.5, e: o ? o.e || 0 : 0, l: o ? o.l || 0 : 0, b: o ? o.b || 0 : 0, timeout: !o, datos: vioDatos, seg: Math.round((performance.now() - t0) / 100) / 10 };
+          G.s.dec.push(rec);
+          if (o) { G.bien = clamp(G.bien + (o.bien || 0), 0, 100); if (o.r >= 0.8) G.boost = 8; }
+          else G.bien = clamp(G.bien - 10, 0, 100);
+          const fb = o ? o.f : "Se acabó el tiempo y la cabina siguió sin instrucciones claras.";
+          $("#ov").innerHTML = `<div class="tel-modal center"><p style="font-weight:700">${esc(fb)}</p><button class="btn" id="dc">Continuar →</button></div>`;
+          $("#dc").addEventListener("click", cerrarOverlay);
+        }
+      }
+
+      function llegada() {
+        G.paused = true;
+        const tr = TRAMOS[G.tramo];
+        if (G.radio.st === "pend") { G.radio.st = "miss"; $("#cRadio").disabled = true; $("#cRadio").classList.remove("glow"); }
+        const ultimo = G.tramo === TRAMOS.length - 1;
+        overlay(`<div class="tel-modal center"><div style="font-size:2.4rem">${ultimo ? "🏔️" : "🚉"}</div><h3>Llegaste a ${tr.a}</h3><p>${tr.alt[1].toLocaleString("es-VE")} m de altitud</p>
+          ${ultimo ? '<p><b>¡Prueba superada!</b> Llevaste a todos hasta Pico Espejo.</p><button class="btn sun" id="ll">Ver mi licencia de operador →</button>' : '<button class="btn" id="ll">Siguiente tramo →</button>'}</div>`);
+        $("#ll").addEventListener("click", () => {
+          if (ultimo) return terminar();
+          G.tramo++; G.emergTramo = 0; inicioTramo(); cerrarOverlay();
+          banner(`Tramo ${G.tramo + 1}: ${TRAMOS[G.tramo].de} → ${TRAMOS[G.tramo].a}`, "info", 2000);
+        });
+      }
+
+      function update(dt) {
+        const tr = TRAMOS[G.tramo];
+        G.s.tiempo += dt;
+        // Velocidad
+        if (G.accel) G.v += 3 * dt;
+        if (G.brake) G.v -= 5 * dt;
+        G.v = clamp(G.v, 0, G.asistido ? 7 : 10);
+        // Ráfagas
+        const g = G.gust;
+        if (g.st === "none") {
+          G.nextGust -= dt;
+          if (G.nextGust <= 0) { g.st = "warn"; g.t = 1.9; g.braked = false; g.str = (tr.rafaga[0] + Math.random() * (tr.rafaga[1] - tr.rafaga[0]) + G.boost) * (G.asistido ? 0.6 : 1); banner("⚠️ RÁFAGA EN CAMINO · ¡FRENA!", "warn"); }
+        } else if (g.st === "warn") {
+          if (G.brake) g.braked = true;
+          g.t -= dt;
+          if (g.t <= 0) {
+            g.st = "on"; g.t = 2.4; G.s.gusts++; if (g.braked) G.s.percib++; if (G.v <= 5) G.s.anticip++; G.s.gustSpeeds.push(G.v);
+            banner(`💨 Ráfaga de ${Math.round(g.str + tr.viento)} km/h`, "warn", 2400);
+          }
+        } else if (g.st === "on") {
+          g.t -= dt;
+          if (g.t <= 0) { g.st = "none"; G.nextGust = 4.5 + Math.random() * 3; }
+        }
+        G.wind = tr.viento + (g.st === "on" ? g.str : 0) + Math.sin(G.t * 1.7) * 2;
+        // Balanceo (sistema masa-resorte)
+        const target = (G.wind / 40) * (0.3 + G.v / 9) * 70;
+        G.swayVel += ((target - G.sway) * 7 - G.swayVel * 2.6) * dt;
+        G.sway = Math.max(0, G.sway + G.swayVel * dt);
+        if (G.sway > 60) G.bien -= 6 * dt * ((G.sway - 60) / 40); else G.bien += 0.8 * dt;
+        G.bien = clamp(G.bien, 0, 100);
+        if (G.sway >= 100) return emergencia();
+        // Radio
+        if (!G.radio.used && G.radio.st === "none" && G.p >= G.radio.at) {
+          G.radio.st = "pend"; G.radio.t = 6; G.radio.used = true; G.radioHecha[G.tramo] = true; G.s.radioTotal++;
+          $("#cRadio").disabled = false; $("#cRadio").classList.add("glow");
+          banner(`📻 Estación ${tr.a}: «Operador, ¿confirma su posición?»`, "radio");
+        } else if (G.radio.st === "pend") {
+          G.radio.t -= dt;
+          if (G.radio.t <= 0) { G.radio.st = "miss"; $("#cRadio").disabled = true; $("#cRadio").classList.remove("glow"); banner("📻 Sin respuesta del operador…", "warn", 1500); }
+        }
+        // Avance
+        G.p += G.v * dt * 1.1;
+        if (!G.decision && G.p >= 55) return decision();
+        if (G.p >= 100) { G.p = 100; return llegada(); }
+      }
+
+      // Dibujo
+      const ridge = (x, seed, amp) => Math.sin(x * 2.1 + seed) * amp + Math.sin(x * 5.3 + seed * 2) * amp * 0.45 + Math.sin(x * 11 + seed * 3) * amp * 0.15;
+      function draw() {
+        const tr = TRAMOS[G.tramo], af = (G.tramo + G.p / 100) / TRAMOS.length;
+        const mix = (a, b, k) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(",")})`;
+        const sky = ctx.createLinearGradient(0, 0, 0, H);
+        sky.addColorStop(0, mix([110, 185, 235], [38, 70, 120], af)); sky.addColorStop(1, mix([210, 236, 250], [150, 175, 210], af));
+        ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+        // Montañas lejanas con nieve
+        ctx.fillStyle = mix([125, 150, 185], [95, 110, 140], af);
+        ctx.beginPath(); ctx.moveTo(0, H);
+        for (let x = 0; x <= W; x += 8) ctx.lineTo(x, H * 0.42 - ridge(x / W, 1 + G.tramo, H * 0.12) - (x / W) * H * 0.1);
+        ctx.lineTo(W, H); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,.85)";
+        for (let x = 0; x <= W; x += 8) { const y = H * 0.42 - ridge(x / W, 1 + G.tramo, H * 0.12) - (x / W) * H * 0.1; if (y < H * 0.3) ctx.fillRect(x, y, 8, 5); }
+        // Ladera cercana
+        ctx.fillStyle = tr.suelo;
+        ctx.beginPath(); ctx.moveTo(0, H);
+        for (let x = 0; x <= W; x += 6) ctx.lineTo(x, H * 0.95 - (x / W) * H * 0.62 + ridge(x / W, 7 + G.tramo * 2, H * 0.035));
+        ctx.lineTo(W, H); ctx.fill();
+        // Frailejones del páramo
+        if (G.tramo >= 1 && G.tramo <= 2) {
+          for (let i = 0; i < 18; i++) {
+            const fx = ((i * 97) % 100) / 100 * W, fy = H * 0.95 - (fx / W) * H * 0.62 + 10 + ((i * 31) % 30);
+            ctx.fillStyle = "#6b5a3a"; ctx.fillRect(fx, fy - 10, 3, 10);
+            ctx.fillStyle = "#c9c36a"; ctx.beginPath(); ctx.arc(fx + 1.5, fy - 12, 5, 0, Math.PI * 2); ctx.fill();
+          }
+        }
+        // Estaciones y cable
+        const A = [W * 0.08, H * 0.72], B = [W * 0.92, H * 0.2], M = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2 + H * 0.03];
+        const estacion = (x, y, nombre) => {
+          ctx.fillStyle = "#e9edf3"; ctx.fillRect(x - 26, y, 52, 30); ctx.fillStyle = "#d62839"; ctx.fillRect(x - 30, y - 6, 60, 8);
+          ctx.fillStyle = "#12233d"; ctx.font = "800 12px Nunito, sans-serif"; ctx.textAlign = "center";
+          ctx.fillStyle = "rgba(255,255,255,.9)"; const w = ctx.measureText(nombre).width + 10; ctx.fillRect(x - w / 2, y + 34, w, 17);
+          ctx.fillStyle = "#12233d"; ctx.fillText(nombre, x, y + 47);
+        };
+        // Torre intermedia
+        ctx.strokeStyle = "#5b6574"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(M[0] - 10, H * 0.95 - (M[0] / W) * H * 0.62 + 6); ctx.lineTo(M[0], M[1]); ctx.lineTo(M[0] + 10, H * 0.95 - (M[0] / W) * H * 0.62 + 6); ctx.stroke();
+        const cablePt = (k) => k < 0.5 ? [A[0] + (M[0] - A[0]) * k * 2, A[1] + (M[1] - A[1]) * k * 2 + Math.sin(k * 2 * Math.PI) * 8] : [M[0] + (B[0] - M[0]) * (k - 0.5) * 2, M[1] + (B[1] - M[1]) * (k - 0.5) * 2 + Math.sin((k - 0.5) * 2 * Math.PI) * 8];
+        ctx.strokeStyle = "#2a2f38"; ctx.lineWidth = 2;
+        for (const off of [0, 5]) { ctx.beginPath(); for (let k = 0; k <= 1.0001; k += 0.02) { const [x, y] = cablePt(k); k === 0 ? ctx.moveTo(x, y - 6 + off) : ctx.lineTo(x, y - 6 + off); } ctx.stroke(); }
+        estacion(A[0], A[1] - 4, tr.de); estacion(B[0], B[1] - 4, tr.a);
+        // Cabina
+        const [cx, cy] = cablePt(G.p / 100);
+        const ang = ((G.sway / 100) * 0.38) * Math.sin(G.t * 2.4) + (G.wind > 25 ? 0.05 : 0);
+        ctx.save(); ctx.translate(cx, cy - 4); ctx.rotate(ang);
+        ctx.fillStyle = "#2a2f38"; ctx.fillRect(-9, -6, 18, 6); ctx.fillRect(-1.5, 0, 3, 30);
+        ctx.fillStyle = "#d62839"; ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(-30, 30, 60, 42, 8); else ctx.rect(-30, 30, 60, 42);
+        ctx.fill();
+        ctx.fillStyle = "#e8f4ff"; ctx.fillRect(-25, 36, 50, 15);
+        ctx.fillStyle = "#12233d"; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc(-19 + i * 9.5, 46, 2.6, 0, Math.PI * 2); ctx.fill(); }
+        ctx.fillStyle = "#fff"; ctx.font = "800 8px Nunito, sans-serif"; ctx.textAlign = "center"; ctx.fillText("MUKUMBARÍ", 0, 64);
+        ctx.restore();
+        // Viento
+        ctx.strokeStyle = `rgba(255,255,255,${0.25 + Math.min(0.5, G.wind / 100)})`; ctx.lineWidth = 1.6;
+        parts.forEach((pt) => {
+          pt.x += (G.wind / 900) * (G.paused ? 0 : 1); if (pt.x > 1.05) { pt.x = -0.05; pt.y = Math.random(); }
+          ctx.beginPath(); ctx.moveTo(pt.x * W, pt.y * H * 0.8); ctx.lineTo((pt.x + pt.l * (G.wind / 25)) * W, pt.y * H * 0.8); ctx.stroke();
+        });
+        // Neblina en tramos altos
+        if (G.tramo >= 2) { ctx.fillStyle = `rgba(235,240,248,${0.12 + 0.08 * Math.sin(G.t)})`; ctx.fillRect(0, H * 0.25, W, H * 0.3); }
+        // Aviso de ráfaga
+        if (G.gust.st === "warn" && Math.floor(G.t * 6) % 2 === 0) {
+          ctx.fillStyle = "#ef5b5b"; ctx.beginPath(); ctx.moveTo(10, H * 0.45); ctx.lineTo(48, H * 0.45 - 22); ctx.lineTo(48, H * 0.45 + 22); ctx.closePath(); ctx.fill();
+          ctx.font = "900 14px Nunito, sans-serif"; ctx.textAlign = "left"; ctx.fillText("RÁFAGA", 54, H * 0.45 + 5);
+        }
+      }
+      function hud() {
+        const tr = TRAMOS[G.tramo];
+        const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+        set("#hTramo", `${G.tramo + 1}/4 · ${tr.de} → ${tr.a}`);
+        set("#hAlt", `${Math.round(tr.alt[0] + (tr.alt[1] - tr.alt[0]) * G.p / 100).toLocaleString("es-VE")} m`);
+        set("#hVel", `${G.v.toFixed(1)} m/s`);
+        set("#hVien", `${Math.round(G.wind)} km/h`);
+        const bal = Math.min(100, Math.round(G.sway)), mb = $("#mBal");
+        if (mb) { mb.style.width = bal + "%"; mb.style.background = bal > 75 ? "var(--bad)" : bal > 50 ? "var(--sun)" : "var(--teal)"; }
+        set("#mBalTxt", bal + " %");
+        const mbi = $("#mBien"); if (mbi) mbi.style.width = Math.round(G.bien) + "%";
+        set("#mBienTxt", Math.round(G.bien) + " %");
+      }
+      let last = performance.now(), raf;
+      function loop(now) {
+        if (G.over) return;
+        const dt = Math.min(0.05, (now - last) / 1000); last = now;
+        G.t += dt;
+        if (!G.paused) update(dt);
+        draw(); hud();
+        raf = requestAnimationFrame(loop);
+      }
+      raf = requestAnimationFrame(loop);
+      onCleanup(() => { G.over = true; cancelAnimationFrame(raf); clearTimeout(bT); });
+      banner(`Tramo 1: ${TRAMOS[0].de} → ${TRAMOS[0].a} · Mantén ▲ para acelerar`, "info", 2600);
+
+      function terminar() {
+        G.over = true; cancelAnimationFrame(raf);
+        const s = G.s, dec = s.dec, n = dec.length || 1;
+        const timeouts = dec.filter((d) => d.timeout).length;
+        const avgQ = avg(dec.map((d) => d.q));
+        const sumE = dec.reduce((a, d) => a + d.e, 0), sumL = dec.reduce((a, d) => a + d.l, 0), sumB = dec.reduce((a, d) => a + d.b, 0);
+        const maxL = TEL_EVENTOS.reduce((a, ev) => a + Math.max(...ev.o.map((o) => o.l || 0)), 0);
+        const maxE = TEL_EVENTOS.reduce((a, ev) => a + Math.max(...ev.o.map((o) => o.e || 0)), 0);
+        const gusts = Math.max(1, s.gusts);
+        const percepcion = s.percib / gusts, comprension = s.data / TEL_EVENTOS.length, proyeccion = s.anticip / gusts;
+        const fastGust = Math.min(4, s.gustSpeeds.filter((v) => v > 7).length);
+        const risky = dec.filter((d) => d.r >= 0.8).length;
+        const noExpl = R.bart.rondas.filter((r) => !r.exploto);
+        const bartAdj = noExpl.length ? avg(noExpl.map((r) => r.cajas)) : 0;
+        const propension = Math.round(clamp(0.5 * (bartAdj / 11) * 100 + 0.3 * avg(dec.map((d) => d.r)) * 100 + 0.2 * (avg(s.gustSpeeds) / 10) * 100, 0, 100));
+        const autorreg = clamp(100 - timeouts * 20 - s.emergencias * 12, 0, 100);
+        const scores = {
+          decisiones: Math.round(avgQ * 80 + (1 - timeouts / n) * 20),
+          analisis: Math.round(30 * percepcion + 30 * comprension + 40 * proyeccion),
+          riesgo: Math.round(clamp(100 - s.emergencias * 20 - risky * 10 - fastGust * 5, 0, 100)),
+          equipo: Math.round((s.radioTotal ? s.radioOK / s.radioTotal : 0) * 50 + (sumE / (maxE || 1)) * 50),
+          liderazgo: Math.round(clamp((sumL / (maxL || 1)) * 70 + (1 - timeouts / n) * 30, 0, 100)),
+          blandas: Math.round(clamp((s.avisos / 4) * 30 + G.bien * 0.35 + autorreg * 0.35 + sumB * 2, 0, 100))
+        };
+        const general = Math.round(avg(Object.values(scores)));
+        S.teleferico = {
+          scores, general, estrellas: general >= 80 ? 3 : general >= 60 ? 2 : 1,
+          propension, propLabel: propension < 35 ? "Prudente" : propension < 65 ? "Equilibrada" : "Audaz",
+          sub: { percepcion: Math.round(percepcion * 100), comprension: Math.round(comprension * 100), proyeccion: Math.round(proyeccion * 100), autorregulacion: autorreg, bienestar: Math.round(G.bien) },
+          stats: { emergencias: s.emergencias, rafagas: s.gusts, anticipadas: s.anticip, radio: `${s.radioOK}/${s.radioTotal}`, avisos: s.avisos, datos: s.data, timeouts, tiempo: Math.round(s.tiempo), bartAjustado: Math.round(bartAdj * 10) / 10, bartExplosiones: R.bart.explosiones, bartPuntos: R.bart.puntos }
+        };
+        save();
+        resultadoTeleferico();
+      }
+    }
+  };
+
+  function telefericoHtml() {
+    const T = S.teleferico, st = T.stats;
+    const orden = Object.entries(T.scores).sort((a, b) => b[1] - a[1]);
+    const fuerte = orden.slice(0, 2).map(([k]) => CRITERIOS_TEL[k].nombre.toLowerCase());
+    const mejorar = orden.slice(-1).map(([k]) => CRITERIOS_TEL[k].nombre.toLowerCase());
+    return `
+      <div class="tel-cert">
+        <div class="muted small" style="font-weight:800;text-transform:uppercase">Licencia de operador · Teleférico Mukumbarí</div>
+        <div class="code" style="font-size:2.4rem">${"★".repeat(T.estrellas)}<span style="opacity:.25">${"★".repeat(3 - T.estrellas)}</span> <span style="font-size:1.4rem">${T.general}/100</span></div>
+        <p style="margin:0">Fortalezas: <b>${fuerte.join("</b> y <b>")}</b>. Para seguir creciendo: <b>${mejorar.join("")}</b>. Propensión al riesgo: <b>${T.propLabel}</b> (${T.propension}/100).</p>
+      </div>
+      <div class="grid g2" style="margin-top:12px">
+        <div><h4>Criterios evaluados</h4>${bars(T.scores, CRITERIOS_TEL, () => "#d62839")}</div>
+        <div><h4>Evidencias registradas en el juego</h4>
+          <table class="small"><tbody>
+            <tr><td>Ráfagas anticipadas (frenó antes)</td><td><b>${st.anticipadas}/${st.rafagas}</b></td></tr>
+            <tr><td>Paradas de emergencia</td><td><b>${st.emergencias}</b></td></tr>
+            <tr><td>Llamadas de radio respondidas</td><td><b>${st.radio}</b></td></tr>
+            <tr><td>Avisos a pasajeros</td><td><b>${st.avisos}/4</b></td></tr>
+            <tr><td>Consultó datos antes de decidir</td><td><b>${st.datos}/4</b></td></tr>
+            <tr><td>Decisiones sin responder a tiempo</td><td><b>${st.timeouts}</b></td></tr>
+            <tr><td>Carga de suministros (cajas promedio sin sobrecarga · sobrecargas)</td><td><b>${st.bartAjustado} · ${st.bartExplosiones}</b></td></tr>
+            <tr><td>Bienestar final de pasajeros</td><td><b>${T.sub.bienestar} %</b></td></tr>
+          </tbody></table></div>
+      </div>
+      <details style="margin-top:10px"><summary class="small"><b>¿Con qué marco científico se evalúa cada criterio?</b></summary>
+        <ul class="small">${Object.entries(CRITERIOS_TEL).map(([k, c]) => `<li><b>${c.nombre}:</b> ${c.marco}.</li>`).join("")}
+        <li><b>Análisis (subescalas de Endsley):</b> percepción ${T.sub.percepcion} · comprensión ${T.sub.comprension} · proyección ${T.sub.proyeccion}.</li></ul>
+      </details>`;
+  }
+  function resultadoTeleferico() {
+    finishStation("teleferico", telefericoHtml() + `<p class="muted small">Superaste la prueba final. Estos resultados describen cómo actuaste bajo presión en una simulación; conversa sobre ellos con tu orientador(a).</p>`);
+  }
 
   // ===== 6. Carta de navegación =====
   function matches() {
@@ -895,7 +1379,7 @@
         En los desafíos destacaste en <b>${aptTop.map((k) => D.APTITUDES[k].nombre.toLowerCase()).join("</b> y <b>")}</b>, y frente a situaciones reales sueles mostrar
         <b>${compTop.map((k) => D.COMPETENCIAS[k].corto.toLowerCase()).join("</b>, <b>")}</b>. Para tu vida profesional valoras especialmente
         <b>${valTop.map((k) => D.VALORES[k].nombre.toLowerCase()).join("</b>, <b>")}</b>.
-        En la expedición actuaste con un estilo <b>${D.TENDENCIAS_ESTILO[S.estilo.principal].estilo}</b> (${D.TENDENCIAS_ESTILO[S.estilo.principal].eje.toLowerCase()}).
+        En la expedición actuaste con un estilo <b>${D.TENDENCIAS_ESTILO[S.estilo.principal].estilo}</b> (${D.TENDENCIAS_ESTILO[S.estilo.principal].eje.toLowerCase()}), y como operador(a) del teleférico obtuviste <b>${S.teleferico.general}/100</b>, con propensión al riesgo <b>${S.teleferico.propLabel.toLowerCase()}</b>.
         ${p.materias.length ? `Tus materias favoritas (${p.materias.map(esc).join(", ")}) ` : "Tus gustos "}son pistas que vale la pena seguir.</p>
       </div>
 
@@ -907,6 +1391,8 @@
 
       <div class="card" style="margin-top:16px"><h3>🏕️ Estilo de comportamiento</h3>${estiloHtml()}</div>
 
+      <div class="card" style="margin-top:16px"><h3>🚡 Evaluación en acción: operador del teleférico</h3>${telefericoHtml()}</div>
+
       <h2 style="margin-top:26px">🎯 Rutas profesionales que encajan contigo</h2>
       <p class="muted">La afinidad combina intereses (50 %), habilidades (20 %), valores (15 %), competencias (8 %) y estilo de comportamiento (7 %). Úsala para explorar, no para cerrar puertas.</p>
       <div class="grid g3">
@@ -915,12 +1401,22 @@
           <b>${i + 1}. ${esc(c.n)}</b>
           <div class="small">${esc(c.d)}</div>
           <div class="small muted">Encaja por: ${[...c.code].slice(0, 2).map((k) => D.RIASEC[k].nombre).join(" + ")} · ${c.apt.map((k) => D.APTITUDES[k].nombre.toLowerCase()).join(", ")} · ${c.val.map((k) => D.VALORES[k].nombre.toLowerCase()).join(", ")}</div>
-          <div class="where">📍 ${c.donde.map(esc).join(" · ")}</div>
+          <div class="small muted">${areaDe(c).icono} ${esc(areaDe(c).nombre)}</div>
+          <div class="where">📍 ${lugares(c)}</div>
         </div>`).join("")}
       </div>
-      <details class="card" style="margin-top:12px"><summary><b>Ver otras ${top.length - 6} opciones ordenadas por afinidad</b></summary>
-        <div class="table-wrap"><table><thead><tr><th>Carrera / oficio</th><th>Afinidad</th><th>Tipo</th></tr></thead><tbody>
-        ${top.slice(6).map((c) => `<tr><td>${esc(c.n)}</td><td>${c.score}%</td><td><span class="tag ${c.tag}">${c.tag}</span></td></tr>`).join("")}
+
+      <div class="card" style="margin-top:16px">
+        <h3>🌐 Tu abanico ampliado: la mejor opción en cada área</h3>
+        <p class="muted small">Revisamos ${top.length} carreras y oficios de universidades e institutos de todo el país. Así se ve tu mejor opción en cada área del conocimiento, para que no descartes caminos antes de explorarlos.</p>
+        <div class="table-wrap"><table><thead><tr><th>Área</th><th>Carrera con mayor afinidad</th><th>Afinidad</th><th>Dónde</th></tr></thead><tbody>
+        ${Object.keys(D.AREAS || {}).map((a) => top.find((c) => c.area === a)).filter(Boolean).sort((x, y) => y.score - x.score).map((c) => `<tr><td>${areaDe(c).icono} ${esc(areaDe(c).nombre)}</td><td><b>${esc(c.n)}</b></td><td>${c.score}%</td><td class="small">${esc((c.unis && c.unis.length ? c.unis.slice(0, 3).join(", ") + (c.unis.length > 3 ? "…" : "") : "Ver OPSU"))}</td></tr>`).join("")}
+        </tbody></table></div>
+      </div>
+
+      <details class="card" style="margin-top:12px"><summary><b>Ver las otras ${top.length - 6} opciones ordenadas por afinidad</b></summary>
+        <div class="table-wrap"><table><thead><tr><th>Carrera / oficio</th><th>Área</th><th>Afinidad</th><th>Tipo</th><th>Universidades</th></tr></thead><tbody>
+        ${top.slice(6).map((c) => `<tr><td>${esc(c.n)}</td><td>${areaDe(c).icono} ${esc(areaDe(c).nombre)}</td><td>${c.score}%</td><td><span class="tag ${c.tag}">${c.tag}</span></td><td class="small">${esc(c.unis && c.unis.length ? c.unis.join(", ") : "Ver OPSU")}</td></tr>`).join("")}
         </tbody></table></div>
       </details>
 
@@ -933,6 +1429,7 @@
           <li>¿Mis valores principales (${valTop.map((k) => D.VALORES[k].nombre.toLowerCase()).join(", ")}) se cumplen en esas carreras en Venezuela hoy?</li>
           <li>¿Cómo puedo fortalecer <b>${compLow.map((k) => D.COMPETENCIAS[k].corto.toLowerCase()).join("</b> y <b>")}</b> antes de graduarme?</li>
           <li>Mi estilo es <b>${D.TENDENCIAS_ESTILO[S.estilo.principal].estilo}</b>: ¿en qué ambientes de estudio y trabajo me sentiría cómodo(a)? ¿Cómo trabajo mi reto: ${D.TENDENCIAS_ESTILO[S.estilo.principal].reto.toLowerCase()}</li>
+          <li>En el teleférico mi criterio más bajo fue <b>${CRITERIOS_TEL[Object.entries(S.teleferico.scores).sort((a, b) => a[1] - b[1])[0][0]].nombre.toLowerCase()}</b>: ¿qué actividades del liceo o la comunidad me ayudarían a desarrollarlo?</li>
           <li>¿Qué opciones cortas (TSU, oficios, cursos) me permiten empezar mientras estudio?</li>
         </ul>
       </div>
@@ -997,7 +1494,7 @@
       app: "navigo", version: 1, fecha: new Date().toISOString(),
       perfil: S.perfil, xp: S.xp, rango: rango(S.xp).n, codigo: hollandCode(),
       intereses: S.intereses, aptitudes: S.aptitudes, competencias: S.competencias.scores,
-      valores: S.valores.scores, valoresOrden: S.valores.orden, mitos: S.mitos, estilo: S.estilo,
+      valores: S.valores.scores, valoresOrden: S.valores.orden, mitos: S.mitos, estilo: S.estilo, teleferico: S.teleferico,
       carreras: top.slice(0, 6).map((c) => ({ n: c.n, afinidad: c.score })),
       plan: S.plan ? { sprint: S.plan.sprint, metasLogradas: S.plan.cerradas } : null
     };
@@ -1060,7 +1557,9 @@
       tk.forEach((k, i) => { const v = i === 3 ? rest : Math.round(Math.random() * rest * 0.6); sh[k] = v; rest -= v; });
       const ord = TK.slice().sort((x, y) => sh[y] - sh[x]);
       const estilo = { shares: sh, principal: ord[0], secundario: ord[1], confianza: ["Alta", "Alta", "Media", "Baja"][Math.floor(Math.random() * 4)], indicadores: { riesgo: Math.round(Math.random() * 100), cooperacion: Math.round(Math.random() * 100) } };
-      return { app: "navigo", demo: true, perfil: { nombre: n + " (ejemplo)", edad: 15 + Math.floor(Math.random() * 3), anio: Math.random() < 0.5 ? "4to año" : "5to año" }, codigo: code, intereses: r, aptitudes: a, competencias: c, valoresOrden: vo, estilo, carreras: [{ n: (car[0] || D.CARRERAS[0]).n, afinidad: 60 + Math.round(Math.random() * 25) }] };
+      const tg = 40 + Math.round(Math.random() * 55);
+      const teleferico = { general: tg, estrellas: tg >= 80 ? 3 : tg >= 60 ? 2 : 1, propLabel: ["Prudente", "Equilibrada", "Audaz"][Math.floor(Math.random() * 3)], scores: { decisiones: tg, analisis: tg, riesgo: tg, equipo: tg, liderazgo: tg, blandas: tg } };
+      return { app: "navigo", demo: true, teleferico, perfil: { nombre: n + " (ejemplo)", edad: 15 + Math.floor(Math.random() * 3), anio: Math.random() < 0.5 ? "4to año" : "5to año" }, codigo: code, intereses: r, aptitudes: a, competencias: c, valoresOrden: vo, estilo, carreras: [{ n: (car[0] || D.CARRERAS[0]).n, afinidad: 60 + Math.round(Math.random() * 25) }] };
     });
   }
   function renderGrupo() {
@@ -1084,12 +1583,12 @@
       <div class="card" style="margin-top:16px">
         <div class="row" style="justify-content:space-between"><h3 style="margin:0">Estudiantes</h3><button class="btn sm" id="csv">⬇️ Descargar CSV</button></div>
         <div class="table-wrap" style="margin-top:10px"><table>
-          <thead><tr><th>Nombre</th><th>Edad</th><th>Año</th><th>Código</th><th>Habilidad top</th><th>Competencia top</th><th>Valor #1</th><th>Estilo</th><th>Confianza</th><th>Ruta #1</th></tr></thead>
+          <thead><tr><th>Nombre</th><th>Edad</th><th>Año</th><th>Código</th><th>Habilidad top</th><th>Competencia top</th><th>Valor #1</th><th>Estilo</th><th>Confianza</th><th>Teleférico</th><th>Ruta #1</th></tr></thead>
           <tbody>${GRUPO.map((g) => { const r = filaGrupo(g); return `<tr>${r.map((x) => `<td>${esc(x)}</td>`).join("")}</tr>`; }).join("")}</tbody>
         </table></div>
       </div>`;
     $("#csv").addEventListener("click", () => {
-      const head = ["Nombre", "Edad", "Año", "Código Holland", "Habilidad top", "Competencia top", "Valor #1", "Estilo", "Confianza del estilo", "Ruta #1", "Afinidad"];
+      const head = ["Nombre", "Edad", "Año", "Código Holland", "Habilidad top", "Competencia top", "Valor #1", "Estilo", "Confianza del estilo", "Teleférico (puntaje)", "Ruta #1", "Afinidad"];
       const rows = GRUPO.map((g) => filaGrupo(g).concat([(g.carreras && g.carreras[0] && g.carreras[0].afinidad) || ""]));
       const csv = [head].concat(rows).map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(";")).join("\r\n");
       download("navigo-grupo.csv", "﻿" + csv, "text/csv;charset=utf-8");
@@ -1102,6 +1601,7 @@
       g.valoresOrden && D.VALORES[g.valoresOrden[0]] ? D.VALORES[g.valoresOrden[0]].nombre : "—",
       g.estilo && D.TENDENCIAS_ESTILO[g.estilo.principal] ? D.TENDENCIAS_ESTILO[g.estilo.principal].estilo : "—",
       (g.estilo && g.estilo.confianza) || "—",
+      g.teleferico ? `${g.teleferico.general} ${"★".repeat(g.teleferico.estrellas)}` : "—",
       (g.carreras && g.carreras[0] && g.carreras[0].n) || "—"];
   }
 
@@ -1123,6 +1623,27 @@
         <div class="card"><b>💎 Valores — comparación por pares</b><p class="small">Dieciséis duelos entre ocho valores laborales producen un orden de prioridades personal, insumo clave para el proyecto de vida.</p></div>
         <div class="card"><b>🏕️ Estilo de comportamiento — evaluación basada en juego</b><p class="small">Una misión de rescate en el tepuy Roraima registra decisiones, tiempos, riesgo asumido, reparto de recursos, consulta de información y persistencia ante el error. Se interpreta con un modelo de dos ejes —ritmo (acelerado/pausado) y foco (tareas/personas)— de la tradición de los estilos sociales (Merrill y Reid), que da cuatro estilos: Pionero, Inspirador, Guardián y Estratega. Incluye un índice de confianza del perfil.</p></div>
       </div>
+      <div class="card" style="margin-top:16px"><b>🚡 Fase final: operador del Teleférico Mukumbarí</b><p class="small">Videojuego en tiempo real con 4 tramos, de Barinitas a Pico Espejo. El estudiante controla la velocidad frente a ráfagas de viento, responde a la radio de las estaciones, informa a los pasajeros y toma 4 decisiones críticas con tiempo límite. Evalúa toma de decisiones, análisis, gestión del riesgo, trabajo en equipo, liderazgo y habilidades socioemocionales, y entrega una «licencia de operador» al superar la prueba.</p></div>
+
+      <h2 style="margin-top:24px">Marco científico de los análisis</h2>
+      <p class="muted small">Cada análisis se apoya en teorías y métodos reconocidos internacionalmente. Los instrumentos de Navigo son adaptaciones gamificadas y deben validarse con estudiantes venezolanos antes de usarse para decisiones institucionales.</p>
+      <div class="card table-wrap"><table>
+        <thead><tr><th>Qué se analiza</th><th>Teoría o método de referencia</th><th>Dónde se aplica en Navigo</th></tr></thead>
+        <tbody>
+          <tr><td>Intereses vocacionales</td><td>Teoría RIASEC de Holland (1997); base del O*NET Interest Profiler (Departamento de Trabajo de EE. UU.)</td><td>Sierra Nevada</td></tr>
+          <tr><td>Aptitudes cognitivas</td><td>Modelo CHC (Cattell-Horn-Carroll): razonamiento fluido, conocimiento verbal, cálculo y memoria</td><td>Médanos de Coro</td></tr>
+          <tr><td>Creatividad</td><td>Pensamiento divergente: Prueba de Usos Alternativos de Guilford (fluidez de ideas)</td><td>La tapara mágica</td></tr>
+          <tr><td>Memoria de trabajo visoespacial</td><td>Paradigma de bloques de Corsi</td><td>Cruce del río (Roraima)</td></tr>
+          <tr><td>Competencias blandas</td><td>Pruebas de juicio situacional (SJT) + competencias genéricas de la G.O. 38.924 + marco socioemocional CASEL</td><td>Catatumbo</td></tr>
+          <tr><td>Valores de trabajo</td><td>Valores laborales de Super y teoría de valores humanos de Schwartz; comparación por pares (Thurstone)</td><td>Salto Ángel</td></tr>
+          <tr><td>Estilo de comportamiento</td><td>Estilos sociales de Merrill y Reid (ejes de asertividad y sensibilidad)</td><td>Tepuy Roraima</td></tr>
+          <tr><td>Evaluación mediante juego</td><td>Evidence-Centered Design (Mislevy) y evaluación encubierta (Shute): cada acción en el juego es una evidencia de una competencia</td><td>Roraima y teleférico</td></tr>
+          <tr><td>Decisiones, liderazgo y cooperación bajo presión</td><td>NOTECHS / Crew Resource Management (habilidades no técnicas de operadores en aviación europea)</td><td>Teleférico</td></tr>
+          <tr><td>Análisis de la situación</td><td>Modelo de conciencia situacional de Endsley (1995): percepción, comprensión y proyección</td><td>Teleférico (ráfagas y datos)</td></tr>
+          <tr><td>Toma de riesgos</td><td>Balloon Analogue Risk Task (BART, Lejuez et al., 2002): propensión conductual al riesgo</td><td>Carga de suministros (teleférico)</td></tr>
+          <tr><td>Proyecto de vida</td><td>Teoría de construcción de carrera de Savickas y metodologías ágiles (Scrum/Kanban)</td><td>Plan en sprints</td></tr>
+        </tbody></table></div>
+
       <h2 style="margin-top:24px">Gamificación y metodologías ágiles</h2>
       <div class="card"><ul>
         <li><b>Narrativa y mapa:</b> una ruta por paisajes venezolanos (Sierra Nevada, Médanos de Coro, Catatumbo, Canaima, Los Roques, Pico Bolívar) que refuerza la identidad local, como propone Aventúrate con los paisajes chilenos.</li>

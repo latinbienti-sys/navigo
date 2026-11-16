@@ -263,6 +263,35 @@ th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--lin
 th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 .drop { border: 2px dashed var(--line); border-radius: 16px; padding: 24px; text-align: center; }
 
+/* ---------- Teleférico (videojuego) ---------- */
+.tel { max-width: 980px; margin: 0 auto; }
+.tel-hud { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+.tel-hud > div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 6px 10px; display: flex; flex-direction: column; min-width: 0; }
+.tel-hud b { font-family: "Baloo 2"; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 640px) { .tel-hud { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tel-hud b { font-size: .9rem; } }
+.tel-stage { position: relative; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow); touch-action: none; }
+.tel-stage canvas { display: block; width: 100%; }
+.tel-banner { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 24px); padding: 8px 14px; border-radius: 12px; font-weight: 800; font-size: .9rem; text-align: center; background: rgba(18,35,61,.88); color: #fff; }
+.tel-banner.warn { background: rgba(217,67,75,.95); animation: blink .5s infinite alternate; }
+.tel-banner.radio { background: rgba(255,176,32,.96); color: #2b1c00; }
+@keyframes blink { to { opacity: .75; } }
+.tel-overlay { position: absolute; inset: 0; background: rgba(12,22,38,.55); display: grid; place-items: center; padding: 12px; overflow-y: auto; }
+.tel-modal { background: var(--card); color: var(--ink); border-radius: 18px; padding: 18px; max-width: 560px; width: 100%; box-shadow: var(--shadow); }
+.tel-modal .opt { padding: 10px 14px; font-size: .92rem; }
+.tel-meters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+.bar.big { height: 16px; margin-top: 4px; }
+.bar.big span { transition: width .15s; }
+.tel-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; user-select: none; -webkit-user-select: none; }
+.tel-btn { padding: 16px 8px; font-size: 1rem; touch-action: none; }
+.tel-btn.brake { background: #8794a8; }
+.tel-btn.accel { background: var(--ok); }
+.tel-btn.on { transform: scale(.95); filter: brightness(1.2); }
+.tel-btn.glow { animation: glow 0.7s infinite alternate; border-color: var(--sun); }
+@keyframes glow { to { box-shadow: 0 0 0 6px color-mix(in srgb, var(--sun) 45%, transparent); } }
+@media (max-width: 640px) { .tel-controls { grid-template-columns: 1fr 1fr; } .tel-meters { grid-template-columns: 1fr; } }
+.tel-cert { border: 2px dashed #d62839; border-radius: 16px; padding: 14px 16px; background: color-mix(in srgb, #d62839 6%, var(--card)); }
+.tel-cert .code { color: #d62839; letter-spacing: .04em; }
+
 /* ---------- Toast & confetti ---------- */
 .toast {
   position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 140%);

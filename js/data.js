@@ -329,6 +329,7 @@ window.NAVIGO_DATA = (function () {
     { id: "valores", lugar: "Salto Ángel – Canaima", titulo: "Brújula de valores", icono: "🌊", color: "#21a67a", desc: "Elige entre dos caminos. Descubre lo que más te importa en tu vida profesional.", xp: 160 },
     { id: "expedicion", lugar: "Tepuy Roraima", titulo: "Expedición al tepuy", icono: "🏕️", color: "#c27c0e", desc: "Una misión de rescate llena de decisiones. No hay respuestas correctas: solo tu forma de actuar.", xp: 180 },
     { id: "mundo", lugar: "Archipiélago Los Roques", titulo: "Puerto del futuro", icono: "🏝️", color: "#0aa5b8", desc: "Tendencias del mundo laboral y el reto «¿Mito o realidad?».", xp: 180 },
+    { id: "teleferico", lugar: "Teleférico Mukumbarí", titulo: "Operador del teleférico", icono: "🚡", color: "#d62839", desc: "Fase final jugable: opera la cabina del teleférico más alto del mundo desde Barinitas hasta Pico Espejo.", xp: 220 },
     { id: "carta", lugar: "Pico Bolívar", titulo: "Tu carta de navegación", icono: "🧭", color: "#e0464f", desc: "Tu perfil completo, las carreras que mejor encajan contigo y tu plan de vida en sprints.", xp: 100 }
   ];
 
